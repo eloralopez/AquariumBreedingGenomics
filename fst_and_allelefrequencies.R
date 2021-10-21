@@ -222,7 +222,7 @@ ggsave(filename = "test.png",ggplot(freqcomp, aes(x = F1freq, y = f1_hetfreq)) +
   geom_point(data=freqcomp, alpha=0.1,aes(F1freq, f1_homreffreq,color="red"))+
   geom_point(data=freqcomp, alpha=0.1,aes(F1freq, f1_homaltfreq,color="green"))+
   theme_bw(),
-  width = 8, height = 8, dpi = 300, units = "in", device='png')
+  width = 8, height = 5, dpi = 300, units = "in", device='png')
 
 #for R on alice:
 library(data.table)
@@ -379,12 +379,14 @@ wholeframe_sharedoutliers<-rbind(subset(wholeframe_sharedoutliers, F1_2019_afreq
 wholeframe_sharedoutliers_increasefreq<-subset(wholeframe_sharedoutliers, F1_2019_afreq>F0_2019_afreq & F1_2020_afreq> F0_2020_afreq)
 wholeframe_sharedoutliers_decreasefreq<-subset(wholeframe_sharedoutliers, F1_2019_afreq<F0_2019_afreq & F1_2020_afreq< F0_2020_afreq)
 
-#write.table(wholeframe_sharedoutliers, file="trulysharedoutliers20211014.txt",quote=FALSE,
-row.names=FALSE,sep = "\t")
+#write.table(wholeframe_sharedoutliers, file="trulysharedoutliers20211018.txt",quote=FALSE,
+#row.names=FALSE,sep = "\t")
+write.table(wholeframe_sharedoutliers_increasefreq, file="trulysharedoutliers_increase20211018.txt",quote=FALSE,row.names=FALSE,sep = "\t")
+write.table(wholeframe_sharedoutliers_decreasefreq, file="trulysharedoutliers_decrease20211018.txt",quote=FALSE,row.names=FALSE,sep = "\t")
 wholeframe_sharedoutliers_2<-data.frame("CHROM"=rep(wholeframe_sharedoutliers$CHROM,4), "POS"=rep(wholeframe_sharedoutliers$POS,4),
                                         "chr_pos"=rep(wholeframe_sharedoutliers$chr_pos,4), "afreqs"=c(wholeframe_sharedoutliers$F0_2019_afreq, wholeframe_sharedoutliers$F1_2019_afreq,wholeframe_sharedoutliers$F0_2020_afreq, wholeframe_sharedoutliers$F1_2020_afreq),
                                         "cohort"=c(rep("F0_2019",length(wholeframe_sharedoutliers$F0_2019_afreq)), rep("F1_2019",length(wholeframe_sharedoutliers$F1_2019_afreq)), rep("F0_2020",length(wholeframe_sharedoutliers$F0_2020_afreq)), rep("F1_2020",length(wholeframe_sharedoutliers$F1_2020_afreq))))
-ggsave(filename = "trulysharedoutliers20211014.png",ggplot(wholeframe_sharedoutliers_2, aes(x=as.factor(chr_pos),y=afreqs,fill=cohort))+
+#ggsave(filename = "trulysharedoutliers20211018.png",ggplot(wholeframe_sharedoutliers_2, aes(x=as.factor(chr_pos),y=afreqs,fill=cohort))+
          geom_bar(position="dodge", stat="identity") +
          scale_fill_brewer(palette="Paired")+
          theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
@@ -405,14 +407,89 @@ ggsave(filename = "trulysharedoutliers_increasefreq20211014.png",ggplot(wholefra
                axis.title=element_blank(),
                axis.text.x = element_text(angle = 90)),
        width = 8, height = 4, dpi = 300, units = "in", device='png')
-ggsave(filename = "fst_withtrulysharedoutliers20211014.png", ggplot(fst2020cleaned, aes(x = chr_pos, y = WEIR_AND_COCKERHAM_FST,color=cohort)) +
+ggsave(filename = "fst_withtrulysharedoutliers20211018.png", ggplot(fst2020cleaned, aes(x = chr_pos, y = WEIR_AND_COCKERHAM_FST,color=cohort.outlier)) +
          scale_color_manual(values=c("skyblue","blue3","tomato","red3"))+
          geom_point(size = 3,alpha=0.1)+
-         geom_point(data=fst2019cleaned,size=3,alpha=0.1,aes(chr_pos, WEIR_AND_COCKERHAM_FST, color=cohort))+
-         geom_point(data=wholeframe_sharedoutliers,size=3,alpha=0.7,aes(chr_pos, fst_2019))+
-         geom_point(data=wholeframe_sharedoutliers,size=3,alpha=0.7,aes(chr_pos, fst_2020))+
+         geom_point(data=fst2019cleaned,size=3,alpha=0.1,aes(chr_pos, WEIR_AND_COCKERHAM_FST, color=cohort.outlier))+
+         #geom_point(data=wholeframe_sharedoutliers,size=3,alpha=0.7,aes(chr_pos, fst_2019))+
+         #geom_point(data=wholeframe_sharedoutliers,size=3,alpha=0.7,aes(chr_pos, fst_2020))+
          
          #geom_hline(yintercept=mean(na.omit(fst2019cleaned$WEIR_AND_COCKERHAM_FST)))+
          #geom_hline(yintercept=mean(na.omit(fst2020cleaned$WEIR_AND_COCKERHAM_FST)))+
          theme_bw(),
-       width = 8, height = 4, dpi = 300, units = "in", device='png')
+       width = 8, height = 6, dpi = 300, units = "in", device='png')
+fst2019cleaned$cohort.outlier<-paste(fst2019cleaned$cohort,fst2019cleaned$outliers,sep=".")
+fst2020cleaned$cohort.outlier<-paste(fst2020cleaned$cohort,fst2020cleaned$outliers,sep=".")
+
+ggsave(filename="trulyoutliers",ggplot(fst2020cleaned, aes(x = chr_pos, y = WEIR_AND_COCKERHAM_FST)) +
+  scale_color_manual(values=c("blue3","tomato"))+
+  geom_point(data=wholeframe_sharedoutliers,size=3,alpha=0.7,aes(chr_pos, fst_2019,color="blue3"))+
+  geom_point(data=wholeframe_sharedoutliers,size=3,alpha=0.7,aes(chr_pos, fst_2020,color="tomato"))+
+  
+   theme_bw())
+types<-c("nonsynonymous","synonymous","upstream","downstream","other")
+trulysharedcounts<-c(15,26,173,122,(652-15-26-173-122))#,195,115,1,5)
+fullvcfcounts<-c((681058+15878),570759,4882356,4874418, 
+                 (16943427-681058-15878-570759-4882356-4874418))
+trulyshared_increasecounts<-c(3,1,20,19,0)
+trulyshared_decreasecounts<-c(12,25,153,103,0)#,165,112,1)
+
+full_v_truly<-data.frame(fullvcfcounts,trulysharedcounts)
+truly_v_decrease<-data.frame(trulysharedcounts, trulyshared_decreasecounts)
+truly_v_increase<-data.frame(trulysharedcounts, trulyshared_increasecounts)
+decrease_v_increase<-data.frame(trulyshared_decreasecounts, trulyshared_increasecounts)
+
+chisq.test(full_v_truly)
+chisq.test(truly_v_decrease)
+chisq.test(truly_v_increase)
+chisq.test(decrease_v_increase)
+fullvcfpercent<-fullvcfcounts/16943427
+trulysharedpercent<-trulysharedcounts/652
+trulyshared_decreasepercent<-trulyshared_decreasecounts/576
+trulyshared_increasepercent<-trulyshared_increasecounts/76
+
+chiframe<-data.frame("percent"=100*(c(fullvcfpercent,trulysharedpercent, trulyshared_decreasepercent, trulyshared_increasepercent)),"types"=rep(types,4),
+                     "dataset"=c(rep("all SNPs",length(types)),rep("shared outliers",length(types)),
+                                 rep("shared outliers DECREASE FREQ",length(types)),rep("shared outliers INCREASE FREQ",length(types))))
+chiframe2<-data.frame("counts"=c(trulysharedcounts, trulyshared_decreasecounts,trulyshared_increasecounts),"types"=rep(types,3),
+                     "dataset"=c(rep("all shared outliers",length(types)),rep("shared outliers DECREASE FREQ",length(types)),rep("shared outliers INCREASE FREQ",length(types))))
+chiframecounts<-data.frame("counts"=c(fullvcfcounts,trulysharedcounts, trulyshared_decreasecounts, trulyshared_increasecounts),"types"=rep(types,4),
+                                     "dataset"=c(rep("all SNPs",length(types)),rep("shared outliers",length(types)),
+                                                 rep("shared outliers DECREASE FREQ",length(types)),rep("shared outliers INCREASE FREQ",length(types))))
+chiframecounts<-chiframecounts[1:10,]
+chiframecounts$dataset<-factor(chiframecounts$dataset, levels = c("all SNPs","shared outliers"))
+chiframecounts$types<-factor(chiframecounts$types, levels = types)
+chiframe<-chiframe[1:10,]
+chiframe$dataset<-factor(chiframe$dataset, levels = c("all SNPs","shared outliers"))
+chiframe$types<-factor(chiframe$types, levels = types)
+
+ggsave(file="SNPtypes20211019.png", ggplot(chiframecounts,aes(x=dataset,y=counts,color=types))+
+  geom_bar(stat="identity",aes(fill=types),position="dodge")+
+  scale_y_continuous(trans='log10')+
+  theme_bw(),
+  width = 8, height = 6, dpi = 300, units = "in", device='png')
+  
+ggsave(file="SNPtypespercents20211019.png",ggplot(chiframe,aes(x=dataset,y=percent,color=types))+
+  geom_bar(stat="identity",aes(fill=types),position="dodge")+
+  theme_bw(),
+  width = 8, height = 6, dpi = 300, units = "in", device='png')
+
+#plink heatmap
+cluster1 <- read.csv("plink.genome.csv", header = TRUE)
+pairs_c1 <- cluster1[,c(1,3,10)]
+colnames(pairs_c1)[1] <- "ind1"
+colnames(pairs_c1)[2] <- "ind2"
+orderedpairs_c1 <- pairs_c1[with(pairs_c1, order(ind1, ind2)), ]
+ggsave(file="plinkheatmap20211018.png",ggplot(data=orderedpairs_c1,aes(x=ind1, y= ind2, fill=PI_HAT)) + geom_tile(color="white")+
+  scale_fill_gradient(low="yellow", high="red",limit=c(0,max(orderedpairs_c1$PI_HAT)),
+                       space="Lab", name="Pi_hat")+
+  theme(axis.text.x = element_text(angle = 90), axis.title = element_blank()),
+  width = 8, height = 8, dpi = 300, units = "in", device='png')
+fdc<-data.frame("chrpos"=rep(wholeframe_sharedoutliers$chr_pos,2),"fst"=c(wholeframe_sharedoutliers$fst_2019, 
+              wholeframe_sharedoutliers$fst_2020), "year"=c(rep("2019",nrow(wholeframe_sharedoutliers)),
+                                                                rep("2020",nrow(wholeframe_sharedoutliers))))
+
+ggsave(file="justtrueoutliers.png",ggplot(fdc, aes(chrpos, fst, color=year))+
+         scale_color_manual(values=c("blue3","tomato"))+
+  geom_point(alpha=0.7)+theme_bw(),
+  width = 8, height = 4, dpi = 300, units = "in", device='png')
