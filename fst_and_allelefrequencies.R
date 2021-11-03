@@ -475,16 +475,31 @@ ggsave(file="SNPtypespercents20211019.png",ggplot(chiframe,aes(x=dataset,y=perce
   width = 8, height = 6, dpi = 300, units = "in", device='png')
 
 #plink heatmap
-cluster1 <- read.csv("plink.genome.csv", header = TRUE)
+cluster1 <- read.csv("plink.genome.editednames.csv", header = TRUE)
 pairs_c1 <- cluster1[,c(1,3,10)]
 colnames(pairs_c1)[1] <- "ind1"
 colnames(pairs_c1)[2] <- "ind2"
 orderedpairs_c1 <- pairs_c1[with(pairs_c1, order(ind1, ind2)), ]
-ggsave(file="plinkheatmap20211018.png",ggplot(data=orderedpairs_c1,aes(x=ind1, y= ind2, fill=PI_HAT)) + geom_tile(color="white")+
-  scale_fill_gradient(low="yellow", high="red",limit=c(0,max(orderedpairs_c1$PI_HAT)),
-                       space="Lab", name="Pi_hat")+
-  theme(axis.text.x = element_text(angle = 90), axis.title = element_blank()),
+orderedpairs_c1$ind1<-factor(orderedpairs_c1$ind1, levels=c("19-1","19-10","19-11","19-12","19-13","19-14","19-15","19-16","19-17","19-18","19-19","19-2","19-20","19-21",
+                                                     "19-22","19-24","19-3","19-4","19-5","19-6","19-7","19-8","19-9","20-1","20-10","20-2","20-4","20-5",
+                                                     "20-6","20-7","20-8","20-9","57","58","62","70","71","72","73","74","76","77","79","80","56","60"))
+orderedpairs_c1$ind2<-factor(orderedpairs_c1$ind2, levels=c("19-10","19-11","19-12","19-13","19-14","19-15","19-16","19-17","19-18","19-19","19-2","19-20","19-21","19-22",
+                                                            "19-24","19-3","19-4","19-5","19-6","19-7","19-8","19-9","20-1","20-10","20-2","20-4","20-5","20-6",
+                                                            "20-7","20-8","20-9","57","58","62","70","71","72","73","74",
+                                                            "76","77","79","80","56","60","65"))
+
+ggsave(file="plinkheatmap2021102.png",ggplot(data=orderedpairs_c1,aes(x=ind1, y= ind2, fill=PI_HAT)) + geom_tile(color="white")+
+  scale_fill_gradient2(low="blue", mid="white",midpoint=max(orderedpairs_c1$PI_HAT)/2,high="red",limit=c(0,max(orderedpairs_c1$PI_HAT)),
+                      space="Lab", name="Pi_hat")+
+  
+  theme(axis.text.x = element_text(angle = 90), axis.title = element_blank())+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()),
   width = 8, height = 8, dpi = 300, units = "in", device='png')
+#ggsave(file="plinkheatmap20211018.png",ggplot(data=orderedpairs_c1,aes(x=ind1, y= ind2, fill=PI_HAT)) + geom_tile(color="white")+
+  #scale_fill_gradient(low="blue",high="red",limit=c(0,max(orderedpairs_c1$PI_HAT)),
+                       #space="Lab", name="Pi_hat")+
+  #theme(axis.text.x = element_text(angle = 90), axis.title = element_blank()),
+ # width = 8, height = 8, dpi = 300, units = "in", device='png')
 fdc<-data.frame("chrpos"=rep(wholeframe_sharedoutliers$chr_pos,2),"fst"=c(wholeframe_sharedoutliers$fst_2019, 
               wholeframe_sharedoutliers$fst_2020), "year"=c(rep("2019",nrow(wholeframe_sharedoutliers)),
                                                                 rep("2020",nrow(wholeframe_sharedoutliers))))
