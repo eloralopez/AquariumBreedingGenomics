@@ -227,6 +227,8 @@ ggsave(filename = "test.png",ggplot(freqcomp, aes(x = F1freq, y = f1_hetfreq)) +
 #for R on alice:
 library(data.table)
 library(ggplot2)
+library(patchwork)
+setwd("~/CaptiveBreeding/analyses_dp10")
 fst2019<-fread("F1_vs_F0_2019.weir.fst", header=TRUE)
 fst2020<-fread("F1_vs_F0_2020.weir.fst", header=TRUE)
 Chr1L <-34295999
@@ -286,7 +288,70 @@ fst2020cleaned <- fst2020[!fst2020$chr_pos %in% differences2020, ]
 
 cutoff2019<-quantile(fst2019cleaned$WEIR_AND_COCKERHAM_FST, 0.99, na.rm=TRUE)
 cutoff2020<-quantile(fst2020cleaned$WEIR_AND_COCKERHAM_FST, 0.99, na.rm=TRUE)
-
+density2019<-ggplot(data=fst2019cleaned, aes(x= WEIR_AND_COCKERHAM_FST, ..density..)) +
+  geom_density(alpha=0.5, fill="blue")+
+  ylab("Probability Density Function")+ xlab("FST")+
+  geom_vline(data=fst2019cleaned, aes(xintercept=cutoff2019, color="blue"),size=1)+
+  geom_vline(data=fst2019cleaned, aes(xintercept=mean(na.omit(WEIR_AND_COCKERHAM_FST)), color="black"),size=1)+
+  
+  scale_color_manual(values = c("blue","black"))+
+  xlim(-0.332,1)+
+  geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.05), y=8.0), label="mean FST")+
+  geom_text(aes(x=(cutoff2019+0.05),y=8), label = "99th percentile")+
+  theme_bw() +
+  theme(axis.text=element_text(size=15), 
+        axis.text.x=element_text(size=15, angle = 0),
+        axis.title=element_text(size=10))+
+  theme(legend.text=element_blank(), legend.title = element_blank())
+  
+ggsave(filename = "density2019.png",ggplot(data=fst2019cleaned, aes(x= WEIR_AND_COCKERHAM_FST, ..density..)) +
+         geom_density(alpha=0.5, fill="blue")+
+         ylab("Probability Density Function")+ xlab("FST")+
+         geom_vline(aes(xintercept=cutoff2019, color="blue"),size=0.5)+
+         geom_vline(aes(xintercept=mean(na.omit(WEIR_AND_COCKERHAM_FST)), color="blue"),size=0.5)+
+         
+         scale_color_manual(values = c("blue","blue"))+
+         xlim(-0.332,1)+
+         geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.15), y=12.0), label="mean FST")+
+         geom_text(aes(x=(cutoff2019+0.15),y=12), label = "99th percentile")+
+                     theme_bw(),
+       width = 8, height = 4, dpi = 300, units = "in", device='png')
+ggsave(filename = "density2020.png",ggplot(data=fst2020cleaned, aes(x= WEIR_AND_COCKERHAM_FST, ..density..)) +
+         geom_density(alpha=0.5, fill="red")+
+         ylab("Probability Density Function")+ xlab("FST")+
+         geom_vline(aes(xintercept=cutoff2020, color="red"),size=0.5)+
+         geom_vline(aes(xintercept=mean(na.omit(WEIR_AND_COCKERHAM_FST)), color="red"),size=0.5)+
+         
+         scale_color_manual(values = c("red","red"))+
+         xlim(-0.332,1)+
+         #geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.15), y=12.0), label="mean FST")+
+         #geom_text(aes(x=(cutoff2020+0.15),y=12), label = "99th percentile")+
+         theme_bw(),
+       width = 8, height = 4, dpi = 300, units = "in", device='png')
+density2019<-ggplot(data=fst2019cleaned, aes(x= WEIR_AND_COCKERHAM_FST, ..density..)) +
+  geom_density(alpha=0.5, fill="blue")+
+  ylab("Probability Density Function")+ xlab("FST")+
+  geom_vline(aes(xintercept=cutoff2019, color="blue"),size=0.5)+
+  geom_vline(aes(xintercept=mean(na.omit(WEIR_AND_COCKERHAM_FST)), color="blue"),size=0.5)+
+  
+  scale_color_manual(values = c("blue","blue"))+
+  xlim(-0.332,1)+
+  #geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.15), y=12.0), label="mean FST")+
+  #geom_text(aes(x=(cutoff2019+0.15),y=12), label = "99th percentile")+
+  theme_bw()
+density2020<-ggplot(data=fst2020cleaned, aes(x= WEIR_AND_COCKERHAM_FST, ..density..)) +
+  geom_density(alpha=0.5, fill="red")+
+  ylab("Probability Density Function")+ xlab("FST")+
+  geom_vline(aes(xintercept=cutoff2020, color="red"),size=0.5)+
+  geom_vline(aes(xintercept=mean(na.omit(WEIR_AND_COCKERHAM_FST)), color="red"),size=0.5)+
+  
+  scale_color_manual(values = c("red","red"))+
+  xlim(-0.332,1)+
+  #geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.15), y=12.0), label="mean FST")+
+  #geom_text(aes(x=(cutoff2020+0.15),y=12), label = "99th percentile")+
+  theme_bw()
+ggsave(filename = "densities.png", density2019 / density2020,
+       width = 13.33, height = 7.5, dpi = 300, units = "in", device='png')
 testfunction<-function(test,cutoff2019) {
   if (test=="NaN") {
     g = "background"
@@ -371,7 +436,43 @@ F1_2020_afreq<-freq_F1_2020$ALT_FREQS
 wholeframe<-data.frame("CHROM"=fst2019cleaned$CHROM, "POS"=fst2019cleaned$POS, "chr_pos"=fst2019cleaned$chr_pos, fst_2019, fst_2020,
                        outliers_2019, outliers_2020, cohort, F0_2019_afreq, F1_2019_afreq,
                        F0_2020_afreq, F1_2020_afreq)
+wholeframe$diff2019<-wholeframe$F1_2019_afreq-wholeframe$F0_2019_afreq
+wholeframe$diff2020<-wholeframe$F1_2020_afreq-wholeframe$F0_2020_afreq
+
 wholeframe_sharedoutliers<-subset(wholeframe,cohort=="sharedoutlier")
+wholeframe_sharedoutliers$diff2019<-wholeframe_sharedoutliers$F1_2019_afreq-wholeframe_sharedoutliers$F0_2019_afreq
+wholeframe_sharedoutliers$diff2020<-wholeframe_sharedoutliers$F1_2020_afreq-wholeframe_sharedoutliers$F0_2020_afreq
+
+all<-ggplot(wholeframe, aes(x=diff2019,y=diff2020,color=cohort))+
+  geom_point(size=1,alpha=0.5)+
+  scale_color_manual(values=c("firebrick1","dodgerblue1","azure3","darkslateblue"))+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept = 0)+
+  xlab("F1 allele freq minus F0 allele freq (2019)")+
+  ylab("F1 allele freq minus F0 allele freq (2020)")+
+  xlim(-0.8,0.8)+ylim(-0.8,0.8)+
+  theme_bw()
+nobg<-ggplot(subset(wholeframe,cohort!="background"), aes(x=diff2019,y=diff2020,color=cohort))+
+  geom_point(size=1,alpha=0.5)+
+  scale_color_manual(values=c("firebrick1","dodgerblue1","darkslateblue"))+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept = 0)+
+  xlab("F1 allele freq minus F0 allele freq (2019)")+
+  ylab("F1 allele freq minus F0 allele freq (2020)")+
+  xlim(-0.8,0.8)+ylim(-0.8,0.8)+
+  theme_bw()
+shared<-ggplot(subset(wholeframe,cohort=="sharedoutlier"), aes(x=diff2019,y=diff2020,color=cohort))+
+  geom_point(size=1,alpha=0.5)+
+  scale_color_manual(values=c("darkslateblue"))+
+  geom_hline(yintercept=0)+
+  geom_vline(xintercept = 0)+
+  xlab("F1 allele freq minus F0 allele freq (2019)")+
+  ylab("F1 allele freq minus F0 allele freq (2020)")+
+  xlim(-0.8,0.8)+ylim(-0.8,0.8)+
+  theme_bw()
+ggsave(filename="allelefreqplots.png",all | nobg | shared,
+       width = 16, height = 7.5, dpi = 300, units = "in", device='png')
+
 wholeframe_sharedoutliers<-rbind(subset(wholeframe_sharedoutliers, F1_2019_afreq<F0_2019_afreq & F1_2020_afreq< F0_2020_afreq),
                                  subset(wholeframe_sharedoutliers, F1_2019_afreq>F0_2019_afreq & F1_2020_afreq> F0_2020_afreq)
                                  
