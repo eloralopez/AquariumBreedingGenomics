@@ -612,9 +612,13 @@ ggsave(file="justtrueoutliers.png",ggplot(fdc, aes(chrpos, fst, color=year))+
 
 ##plink LD heatmap F0_2020:
 #plink heatmap
-cluster1 <- read.csv("/Users/elopez-nandam/Documents/CaptiveBreeding/data/just652outliers_F0_2020.ld.csv", header = TRUE)
+cluster1 <- read.csv("/Users/elopez-nandam/Documents/CaptiveBreeding/data/just652outliers_F0_2020_no707273.ld.csv", header = TRUE)
 chr1<-subset(cluster1, startsWith(cluster1$SNP_A, 'chr1:')==TRUE & startsWith(cluster1$SNP_B, 'chr1:')==TRUE)
 ordered <- chr1[with(chr1, order(BP_A, BP_B)), ]
+chr2<-subset(cluster1, startsWith(cluster1$SNP_A, 'chr2')==TRUE & startsWith(cluster1$SNP_B, 'chr2')==TRUE)
+ordered <- chr2[with(chr2, order(BP_A, BP_B)), ]
+chr3<-subset(cluster1, startsWith(cluster1$SNP_A, 'chr3')==TRUE & startsWith(cluster1$SNP_B, 'chr3')==TRUE)
+ordered <- chr3[with(chr3, order(BP_A, BP_B)), ]
 ordered$SNP_A<-factor(ordered$SNP_A, levels=unique(ordered$SNP_A))
 ordered$SNP_B<-factor(ordered$SNP_B, levels=unique(ordered$SNP_B))
 
@@ -626,15 +630,17 @@ pairs_c1$snp2<-factor(pairs_c1$snp2, levels=unique(pairs_c1$snp2))
 
 #orderedpairs_c1 <- pairs_c1[with(pairs_c1, order(snp1, snp2)), ]
 pairs_chr1<-subset(pairs_c1, startsWith(pairs_c1$snp1, 'chr1:')==TRUE & startsWith(pairs_c1$snp2, 'chr1:')==TRUE)
-ggsave(file="LDheatmap20211130_chr1.png",ggplot(data=ordered,aes(x=SNP_A, y= SNP_B, fill=R2)) + geom_tile(color="white")+
-  scale_fill_gradient2(low="blue", mid="white",midpoint=max(chr1$R2)/2,high="red",limit=c(0,max(chr1$R2)),
+colorvector<-rep(c("red","blue","black"),length(unique(ordered$SNP_A))/3)
+                 
+ggsave(file="LDheatmap20211130_chr3_no707273.png",ggplot(data=ordered,aes(x=SNP_A, y= SNP_B, fill=R2)) + geom_tile(color="white")+
+  scale_fill_gradient2(low="blue", mid="white",midpoint=max(ordered$R2)/2,high="red",limit=c(0,max(ordered$R2)),
                        space="Lab", name="Pi_hat")+
   
   theme(axis.text.x = element_text(angle = 90), axis.title = element_blank())+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()),
   width = 8, height = 8, dpi = 300, units = "in", device='png')
 
-ggsave(file="LDheatmap20211130_allchrs.png",ggplot(data=pairs_c1,aes(x=snp1, y= snp2, fill=R2)) + geom_tile(color="white")+
+ggsave(file="LDheatmap20211130_allchrs_no707273.png",ggplot(data=pairs_c1,aes(x=snp1, y= snp2, fill=R2)) + geom_tile(color="white")+
   scale_fill_gradient2(low="blue", mid="white",midpoint=max(pairs_c1$R2)/2,high="red",limit=c(0,max(pairs_c1$R2)),
                        space="Lab", name="Pi_hat")+
   
