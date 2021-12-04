@@ -619,6 +619,11 @@ chr2<-subset(cluster1, startsWith(cluster1$SNP_A, 'chr2')==TRUE & startsWith(clu
 ordered <- chr2[with(chr2, order(BP_A, BP_B)), ]
 chr3<-subset(cluster1, startsWith(cluster1$SNP_A, 'chr3')==TRUE & startsWith(cluster1$SNP_B, 'chr3')==TRUE)
 ordered <- chr3[with(chr3, order(BP_A, BP_B)), ]
+chr4<-subset(cluster1, startsWith(cluster1$SNP_A, 'chr4')==TRUE & startsWith(cluster1$SNP_B, 'chr4')==TRUE)
+ordered <- chr4[with(chr4, order(BP_A, BP_B)), ]
+chr5<-subset(cluster1, startsWith(cluster1$SNP_A, 'chr5')==TRUE & startsWith(cluster1$SNP_B, 'chr5')==TRUE)
+ordered <- chr5[with(chr5, order(BP_A, BP_B)), ]
+
 ordered$SNP_A<-factor(ordered$SNP_A, levels=unique(ordered$SNP_A))
 ordered$SNP_B<-factor(ordered$SNP_B, levels=unique(ordered$SNP_B))
 
@@ -632,7 +637,7 @@ pairs_c1$snp2<-factor(pairs_c1$snp2, levels=unique(pairs_c1$snp2))
 pairs_chr1<-subset(pairs_c1, startsWith(pairs_c1$snp1, 'chr1:')==TRUE & startsWith(pairs_c1$snp2, 'chr1:')==TRUE)
 colorvector<-rep(c("red","blue","black"),length(unique(ordered$SNP_A))/3)
                  
-ggsave(file="LDheatmap20211130_chr3_no707273.png",ggplot(data=ordered,aes(x=SNP_A, y= SNP_B, fill=R2)) + geom_tile(color="white")+
+ggsave(file="LDheatmap20211130_chr5_no707273.png",ggplot(data=ordered,aes(x=SNP_A, y= SNP_B, fill=R2)) + geom_tile(color="white")+
   scale_fill_gradient2(low="blue", mid="white",midpoint=max(ordered$R2)/2,high="red",limit=c(0,max(ordered$R2)),
                        space="Lab", name="Pi_hat")+
   
