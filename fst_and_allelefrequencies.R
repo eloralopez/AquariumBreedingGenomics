@@ -193,6 +193,7 @@ ggsave(filename = "AF_22trulysharedoutliers20210929.png",ggplot(wholeframe_share
   width = 8, height = 4, dpi = 300, units = "in", device='png')
 
 ##just the 2019 big family:
+
 freq_2019bigfamily_F0<-read.delim("CA2019parentsandF1_GATHERED_biSNPs_F0only_AF.afreq",header=TRUE)
 freq_2019bigfamily_F1<-read.delim("CA2019parentsandF1_GATHERED_biSNPs_F1only_AF.afreq",header=TRUE)
 f1_genocounts<-read.delim("CA2019parentsandF1_GATHERED_biSNPs_F1only_genocount.gcount",header=TRUE)
@@ -208,7 +209,7 @@ freqcomp<-data.frame(F0freq, F1freq, "chrom"=freq_2019bigfamily_F0$X.CHROM,"pos"
                      f1_homreffreq, f1_hetfreq, f1_homaltfreq)
 ggsave(filename = "CA2019bigfamilyAF.png", ggplot(freqcomp, aes(x = F1freq, y = )) +
   #scale_color_manual(values=c("skyblue","blue3","tomato","red3"))+
-  geom_point(size = 3,alpha=0.1)+theme_bw(),
+    geom_jitter(size = 3,alpha=0.2, width=0.02)+theme_bw(),
 width = 8, height = 8, dpi = 300, units = "in", device='png')
 
 ggsave(filename = "test.png",ggplot(freqcomp, aes(x = F1freq, y = f1_hetfreq)) +
@@ -216,14 +217,95 @@ ggsave(filename = "test.png",ggplot(freqcomp, aes(x = F1freq, y = f1_hetfreq)) +
   #scale_color_manual(values=c("skyblue","blue3","tomato","red3"))+
   #geom_point(size = 3,alpha=0.1)+theme_bw(),
   width = 8, height = 8, dpi = 300, units = "in", device='png')
- 
-ggsave(filename = "test.png",ggplot(freqcomp, aes(x = F1freq, y = f1_hetfreq)) +
-  geom_point(alpha=0.1,color="blue")+
-  geom_point(data=freqcomp, alpha=0.1,aes(F1freq, f1_homreffreq,color="red"))+
-  geom_point(data=freqcomp, alpha=0.1,aes(F1freq, f1_homaltfreq,color="green"))+
+hw_allsnps<-ggplot(freqcomp) +
+  geom_point(data=freqcomp, alpha=0.1,aes(x = F1freq, y = f1_hetfreq),color="green",position="jitter")+
+  geom_point(data=freqcomp, alpha=0.1,aes(F1freq, f1_homreffreq),color="blue",position="jitter")+
+  geom_point(data=freqcomp, alpha=0.1,aes(F1freq, f1_homaltfreq),color="red",position="jitter")+
+  xlab("alt allele freq")+ylab("genotype freq")+
+  theme_bw()
+ggsave(filename = "hardyweinberg2019bigfamilyallsnps.png",ggplot(freqcomp) +
+  geom_point(data=freqcomp, alpha=0.1,aes(x = F1freq, y = f1_hetfreq),color="green",position="jitter")+
+  geom_point(data=freqcomp, alpha=0.1,aes(F1freq, f1_homreffreq),color="blue",position="jitter")+
+  geom_point(data=freqcomp, alpha=0.1,aes(F1freq, f1_homaltfreq),color="red",position="jitter")+
+  xlab("alt freq")+ylab("ref freq")+
   theme_bw(),
   width = 8, height = 5, dpi = 300, units = "in", device='png')
+##just 652 snps:
+freq_func<-function(afreq_1, afreq_2, genocounts) {
+freq_2019bigfamily_F0_652<-read.delim(afreq_1,header=TRUE)
+freq_2019bigfamily_F1_652<-read.delim(afreq_2,header=TRUE)
+f1_genocounts_652<-read.delim(genocounts,header=TRUE)
+#freq_2019bigfamily_F0<-differencefunction(freq_2019bigfamily_F0)
+#freq_2019bigfamily_F1<-differencefunction(freq_2019bigfamily_F1)
+F0freq_652<-freq_2019bigfamily_F0_652$ALT_FREQS
+F1freq_652<-freq_2019bigfamily_F1_652$ALT_FREQS
+f1_homreffreq_652<-f1_genocounts_652$HOM_REF_CT/(f1_genocounts_652$HOM_REF_CT+f1_genocounts_652$HET_REF_ALT_CTS+f1_genocounts_652$TWO_ALT_GENO_CTS)
+f1_hetfreq_652<-f1_genocounts_652$HET_REF_ALT_CTS/(f1_genocounts_652$HOM_REF_CT+f1_genocounts_652$HET_REF_ALT_CTS+f1_genocounts_652$TWO_ALT_GENO_CTS)
+f1_homaltfreq_652<-f1_genocounts_652$TWO_ALT_GENO_CTS/(f1_genocounts_652$HOM_REF_CT+f1_genocounts_652$HET_REF_ALT_CTS+f1_genocounts_652$TWO_ALT_GENO_CTS)
 
+freqcomp_652<-data.frame(F0freq_652, F1freq_652, "chrom"=freq_2019bigfamily_F0_652$X.CHROM,"pos"=freq_2019bigfamily_F0_652$POS,
+                     f1_homreffreq_652, f1_hetfreq_652, f1_homaltfreq_652)
+just652hw_plot<-ggplot(freqcomp_652) +
+  geom_point(data=freqcomp_652, alpha=0.1,aes(x = F1freq_652, y = f1_hetfreq_652),color="green",position="jitter")+
+  geom_point(data=freqcomp_652, alpha=0.1,aes(F1freq_652, f1_homreffreq_652),color="blue",position="jitter")+
+  geom_point(data=freqcomp_652, alpha=0.1,aes(F1freq_652, f1_homaltfreq_652),color="red",position="jitter")+
+  xlab("alt allele freq")+ylab("genotype freq")+
+  theme_bw()
+af_allsnps_sina<-ggplot(subset(freqcomp_652, F0freq_652>0 & F0freq_652<1), aes(x = as.factor(F0freq_652)))+
+  geom_violin(aes(fill=as.factor(F0freq_652),y=F1freq_652),width=1)+
+  geom_sina(alpha=0.2,aes(y = F1freq_652,group=as.factor(F0freq_652)))+
+  #geom_jitter(alpha=0.2, aes(y=F1freq_652),height=0.01, width=0.01)+
+  
+  theme_bw()+
+  theme(legend.position="none")
+#return(af_allsnps_sina)
+return(freqcomp_652)
+}
+freq652<-freq_func("bigfamily02910_just652_F0_AF.afreq", "bigfamily02910_just652_F1_AF.afreq","bigfamily02910_just652_F1.recode.vcf_genocounts.gcount")
+freqall<-freq_func("CA2019parentsandF1_GATHERED_biSNPs_F0only_AF.afreq", "CA2019parentsandF1_GATHERED_biSNPs_F1only_AF.afreq","CA2019parentsandF1_GATHERED_biSNPs_F1only_genocount.gcount")
+af_combined<- freq652 | freqall
+ggsave("af_plots_violin_20220419.png",af_combined,
+       width = 8, height = 5, dpi = 300, units = "in", device='png')
+#ggsave(filename = "hardyweinberg2019bigfamilyallsnps.png",ggplot(freqcomp_652) +
+         geom_point(data=freqcomp_652, alpha=0.1,aes(x = F1freq_652, y = f1_hetfreq_652,color="green"))+
+         #geom_point(data=freqcomp_652, alpha=0.1,aes(F1freq_652, f1_homreffreq_652,color="red"))+
+         #geom_point(data=freqcomp_652, alpha=0.1,aes(F1freq_652, f1_homaltfreq_652,color="blue"))+
+         theme_bw(),
+       width = 8, height = 5, dpi = 300, units = "in", device='png')
+just652hw_plot<-ggplot(freqcomp_652) +
+  geom_point(data=freqcomp_652, alpha=0.1,aes(x = F1freq_652, y = f1_hetfreq_652),color="green",position="jitter")+
+  geom_point(data=freqcomp_652, alpha=0.1,aes(F1freq_652, f1_homreffreq_652),color="blue",position="jitter")+
+  geom_point(data=freqcomp_652, alpha=0.1,aes(F1freq_652, f1_homaltfreq_652),color="red",position="jitter")+
+  xlab("alt allele freq")+ylab("genotype freq")+
+  theme_bw()
+af_allsnps<-ggplot(freqcomp, aes(x = F0freq, y = F1freq)) +
+  geom_jitter(size = 3,alpha=0.2, width=0.02)+theme_bw()
+af_652<-ggplot(freqcomp_652, aes(x = F0freq_652, y = F1freq_652)) +
+  geom_jitter(size = 3,alpha=0.2, width=0.02)+theme_bw()
+combined<- af_allsnps_sina | af_652
+combined_hw<- hw_allsnps | just652hw_plot
+ggsave(filename = "af_bigfamily_allsnps_2.png",af_allsnps_sina, 
+       width = 12, height = 6, dpi = 300, units = "in", device='png')
+af_allsnps_sina<-ggplot(subset(freqcomp, F0freq>0 & F0freq<1), aes(x = F0freq))+
+    geom_sina(alpha=0.2,aes(y = F1freq,group=as.factor(F0freq)))+
+  theme_bw()
+
+ggplot(freqcomp_652, aes(x = as.factor(F0freq_652)))+
+  geom_violin(aes(fill=as.factor(F0freq_652),y=F1freq_652),width=1)+
+  #geom_sina(alpha=0.2,aes(y = F1freq_652,group=as.factor(F0freq_652)))+
+  theme_bw()
+
+af_allsnps_sina<-ggplot(subset(freqcomp, F0freq>0 & F0freq<1), aes(x = as.factor(F0freq)))+
+  geom_violin(aes(fill=as.factor(F0freq),y=F1freq),width=1)+
+  geom_sina(alpha=0.2,aes(y = F1freq,group=as.factor(F0freq)))+
+  theme_bw()
+
+ggsave(filename = "hw_bigfamily_combined.png",combined_hw, 
+       width = 16, height = 8, dpi = 300, units = "in", device='png')
+dens<-ggplot(data=subset(freqcomp,F0freq==0.5), aes(x=F1freq)) +
+  geom_density(alpha=0.5)
+ggsave(filename="dens.png", dens,
+       width = 8, height = 8, dpi = 300, units = "in", device='png')
 #for R on alice:
 library(data.table)
 library(ggplot2)
@@ -288,57 +370,60 @@ fst2020cleaned <- fst2020[!fst2020$chr_pos %in% differences2020, ]
 
 cutoff2019<-quantile(fst2019cleaned$WEIR_AND_COCKERHAM_FST, 0.99, na.rm=TRUE)
 cutoff2020<-quantile(fst2020cleaned$WEIR_AND_COCKERHAM_FST, 0.99, na.rm=TRUE)
-density2019<-ggplot(data=fst2019cleaned, aes(x= WEIR_AND_COCKERHAM_FST, ..density..)) +
-  geom_density(alpha=0.5, fill="blue")+
-  ylab("Probability Density Function")+ xlab("FST")+
-  geom_vline(data=fst2019cleaned, aes(xintercept=cutoff2019, color="blue"),size=1)+
-  geom_vline(data=fst2019cleaned, aes(xintercept=mean(na.omit(WEIR_AND_COCKERHAM_FST)), color="black"),size=1)+
+# density2019<-ggplot(data=fst2019cleaned, aes(x= WEIR_AND_COCKERHAM_FST, ..density..)) +
+#   geom_density(alpha=0.5, fill="blue")+
+#   ylab("Probability Density Function")+ xlab("FST")+
+#   geom_vline(data=fst2019cleaned, aes(xintercept=cutoff2019, color="blue"),size=1)+
+#   geom_vline(data=fst2019cleaned, aes(xintercept=mean(na.omit(WEIR_AND_COCKERHAM_FST)), color="black"),size=1)+
+#   
+#   scale_color_manual(values = c("blue","black"))+
+#   xlim(-0.332,1)+
+#   geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.05), y=8.0), label="mean FST")+
+#   geom_text(aes(x=(cutoff2019+0.05),y=8), label = "99th percentile")+
+#   theme_bw() +
+#   theme(axis.text=element_text(size=15), 
+#         axis.text.x=element_text(size=15, angle = 0),
+#         axis.title=element_text(size=10))+
+#   theme(legend.text=element_blank(), legend.title = element_blank())
   
-  scale_color_manual(values = c("blue","black"))+
-  xlim(-0.332,1)+
-  geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.05), y=8.0), label="mean FST")+
-  geom_text(aes(x=(cutoff2019+0.05),y=8), label = "99th percentile")+
-  theme_bw() +
-  theme(axis.text=element_text(size=15), 
-        axis.text.x=element_text(size=15, angle = 0),
-        axis.title=element_text(size=10))+
-  theme(legend.text=element_blank(), legend.title = element_blank())
-  
-ggsave(filename = "density2019.png",ggplot(data=fst2019cleaned, aes(x= WEIR_AND_COCKERHAM_FST, ..density..)) +
-         geom_density(alpha=0.5, fill="blue")+
-         ylab("Probability Density Function")+ xlab("FST")+
-         geom_vline(aes(xintercept=cutoff2019, color="blue"),size=0.5)+
-         geom_vline(aes(xintercept=mean(na.omit(WEIR_AND_COCKERHAM_FST)), color="blue"),size=0.5)+
-         
-         scale_color_manual(values = c("blue","blue"))+
-         xlim(-0.332,1)+
-         geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.15), y=12.0), label="mean FST")+
-         geom_text(aes(x=(cutoff2019+0.15),y=12), label = "99th percentile")+
-                     theme_bw(),
-       width = 8, height = 4, dpi = 300, units = "in", device='png')
-ggsave(filename = "density2020.png",ggplot(data=fst2020cleaned, aes(x= WEIR_AND_COCKERHAM_FST, ..density..)) +
-         geom_density(alpha=0.5, fill="red")+
-         ylab("Probability Density Function")+ xlab("FST")+
-         geom_vline(aes(xintercept=cutoff2020, color="red"),size=0.5)+
-         geom_vline(aes(xintercept=mean(na.omit(WEIR_AND_COCKERHAM_FST)), color="red"),size=0.5)+
-         
-         scale_color_manual(values = c("red","red"))+
-         xlim(-0.332,1)+
-         #geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.15), y=12.0), label="mean FST")+
-         #geom_text(aes(x=(cutoff2020+0.15),y=12), label = "99th percentile")+
-         theme_bw(),
-       width = 8, height = 4, dpi = 300, units = "in", device='png')
+# ggsave(filename = "density2019.png",ggplot(data=fst2019cleaned, aes(x= WEIR_AND_COCKERHAM_FST, ..density..)) +
+#          geom_density(alpha=0.5, fill="blue")+
+#          ylab("Probability Density Function")+ xlab("FST")+
+#          geom_vline(aes(xintercept=cutoff2019, color="blue"),size=0.5)+
+#          geom_vline(aes(xintercept=mean(na.omit(WEIR_AND_COCKERHAM_FST)), color="blue"),size=0.5)+
+#          
+#          scale_color_manual(values = c("blue","blue"))+
+#          xlim(-0.332,1)+
+#          geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.15), y=12.0), label="mean FST")+
+#          geom_text(aes(x=(cutoff2019+0.15),y=12), label = "99th percentile")+
+#                      theme_bw(),
+#        width = 8, height = 4, dpi = 300, units = "in", device='png')
+# ggsave(filename = "density2020.png",ggplot(data=fst2020cleaned, aes(x= WEIR_AND_COCKERHAM_FST, ..density..)) +
+#          geom_density(alpha=0.5, fill="red")+
+#          ylab("Probability Density Function")+ xlab("FST")+
+#          geom_vline(aes(xintercept=cutoff2020, color="red"),size=0.5)+
+#          geom_vline(aes(xintercept=mean(na.omit(WEIR_AND_COCKERHAM_FST)), color="red"),size=0.5)+
+#          
+#          scale_color_manual(values = c("red","red"))+
+#          xlim(-0.332,1)+
+#          #geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.15), y=12.0), label="mean FST")+
+#          #geom_text(aes(x=(cutoff2020+0.15),y=12), label = "99th percentile")+
+#          theme_bw(),
+#        width = 8, height = 4, dpi = 300, units = "in", device='png')
 density2019<-ggplot(data=fst2019cleaned, aes(x= WEIR_AND_COCKERHAM_FST, ..density..)) +
   geom_density(alpha=0.5, fill="blue")+
   ylab("Probability Density Function")+ xlab("FST")+
   geom_vline(aes(xintercept=cutoff2019, color="blue"),size=0.5)+
   geom_vline(aes(xintercept=mean(na.omit(WEIR_AND_COCKERHAM_FST)), color="blue"),size=0.5)+
-  
+
   scale_color_manual(values = c("blue","blue"))+
   xlim(-0.332,1)+
-  #geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.15), y=12.0), label="mean FST")+
-  #geom_text(aes(x=(cutoff2019+0.15),y=12), label = "99th percentile")+
-  theme_bw()
+  ylim(0,80)+
+  geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.15), y=12.0), label="mean FST")+
+  geom_text(aes(x=(cutoff2019+0.15),y=12), label = "99th percentile")+
+  
+  theme_bw()+
+  theme(legend.position="none")
 density2020<-ggplot(data=fst2020cleaned, aes(x= WEIR_AND_COCKERHAM_FST, ..density..)) +
   geom_density(alpha=0.5, fill="red")+
   ylab("Probability Density Function")+ xlab("FST")+
@@ -347,10 +432,12 @@ density2020<-ggplot(data=fst2020cleaned, aes(x= WEIR_AND_COCKERHAM_FST, ..densit
   
   scale_color_manual(values = c("red","red"))+
   xlim(-0.332,1)+
-  #geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.15), y=12.0), label="mean FST")+
-  #geom_text(aes(x=(cutoff2020+0.15),y=12), label = "99th percentile")+
-  theme_bw()
-ggsave(filename = "densities.png", density2019 / density2020,
+  ylim(0,80)+
+  geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.15), y=12.0), label="mean FST")+
+  geom_text(aes(x=(cutoff2020+0.15),y=12), label = "99th percentile")+
+  theme_bw()+
+  theme(legend.position="none")
+ggsave(filename = "densities20220419.png", density2019 / density2020,
        width = 13.33, height = 7.5, dpi = 300, units = "in", device='png')
 testfunction<-function(test,cutoff2019) {
   if (test=="NaN") {
@@ -438,7 +525,36 @@ wholeframe<-data.frame("CHROM"=fst2019cleaned$CHROM, "POS"=fst2019cleaned$POS, "
                        F0_2020_afreq, F1_2020_afreq)
 wholeframe$diff2019<-wholeframe$F1_2019_afreq-wholeframe$F0_2019_afreq
 wholeframe$diff2020<-wholeframe$F1_2020_afreq-wholeframe$F0_2020_afreq
+wholeframe$diffoutliers2019_high<-mapply(testfunction, wholeframe$diff2019, cutoff2019_afreq_high)
+wholeframe$diffoutliers2019_low<-mapply(testfunction, wholeframe$diff2019, cutoff2019_afreq_low)
 
+wholeframe$diffoutliers2020_high<-mapply(testfunction, wholeframe$diff2020, cutoff2020_afreq_high)
+wholeframe$diffoutliers2020_low<-mapply(testfunction, wholeframe$diff2020, cutoff2020_afreq_low)
+
+density2019_diff<-ggplot(data=wholeframe, aes(x= diff2019, ..density..)) +
+  geom_density(alpha=0.5, fill="blue")+
+  ylab("Probability Density Function")+ xlab("FST")+
+  geom_vline(aes(xintercept=cutoff2019_afreq_high, color="blue"),size=0.5)+
+  geom_vline(aes(xintercept=cutoff2019_afreq_low, color="blue"),size=0.5)+
+  
+  scale_color_manual(values = c("blue","blue"))+
+  xlim(-0.35,.35)+
+  #geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.15), y=12.0), label="mean FST")+
+  #geom_text(aes(x=(cutoff2019+0.15),y=12), label = "99th percentile")+
+  theme_bw()
+density2020_diff<-ggplot(data=wholeframe, aes(x= diff2020, ..density..)) +
+  geom_density(alpha=0.5, fill="blue")+
+  ylab("Probability Density Function")+ xlab("FST")+
+  geom_vline(aes(xintercept=cutoff2020_afreq_high, color="blue"),size=0.5)+
+  geom_vline(aes(xintercept=cutoff2020_afreq_low, color="blue"),size=0.5)+
+  
+  scale_color_manual(values = c("blue","blue"))+
+  xlim(-0.35,.35)+
+  #geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.15), y=12.0), label="mean FST")+
+  #geom_text(aes(x=(cutoff2019+0.15),y=12), label = "99th percentile")+
+  theme_bw()
+ggsave(filename = "densities_diff.png", density2019_diff / density2020_diff,
+       width = 13.33, height = 7.5, dpi = 300, units = "in", device='png')
 wholeframe_sharedoutliers<-subset(wholeframe,cohort=="sharedoutlier")
 wholeframe_sharedoutliers$diff2019<-wholeframe_sharedoutliers$F1_2019_afreq-wholeframe_sharedoutliers$F0_2019_afreq
 wholeframe_sharedoutliers$diff2020<-wholeframe_sharedoutliers$F1_2020_afreq-wholeframe_sharedoutliers$F0_2020_afreq
@@ -652,4 +768,60 @@ ggsave(file="LDheatmap20211130_allchrs_no707273.png",ggplot(data=pairs_c1,aes(x=
   theme(axis.text.x = element_text(angle = 90), axis.title = element_blank())+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()),
   width = 8, height = 8, dpi = 900, units = "in", device='png')
+
+cutoff2019_afreq_high<-quantile(wholeframe$diff2019, 0.99, na.rm=TRUE)
+cutoff2019_afreq_low<-quantile(wholeframe$diff2019, 0.01, na.rm=TRUE)
+
+cutoff2020_afreq_high<-quantile(wholeframe$diff2020, 0.99, na.rm=TRUE)
+cutoff2020_afreq_low<-quantile(wholeframe$diff2020, 0.01, na.rm=TRUE)
+
+#bootstrap test:
+freqcomp_1<-head(freqcomp, 100000)
+f0_f1_af_func<-function(freqcomp_1, i) {
+  d2<-freqcomp_1[i,]
+  
+  #return(cor(d2$F0freq,d2$F1freq))
+  return(plot(d2$F0freq,d2$F1freq))
+}
+set.seed(1)
+boot_corr<-boot(freqcomp_1, f0_f1_af_func, R=10)
+#do this for all of the 2019 99th percentile outliers dataset
+
+#hw
+ggplot()+
+  geom_line
+
+x<- seq(0, 10, 0.2)
+y<- x^2  - 1.25* x - 5 + rnorm(length(x), 0, 0.3)
+dfSubSample <-data.frame(x, y)
+
+#fit the model
+m=glm(y ~ poly(x,2), data=dfSubSample, family = "gaussian")
+summary(m)
+
+#make the prediction, (need to pass a dataframe to the predict function
+yhat <- predict(m, data.frame(x=seq(-1, 11, 0.4)))    
+prediction <- data.frame(x=seq(-1, 11, 0.4), yhat)
+
+#plot
+library(ggplot2)
+g<-ggplot(prediction, aes(x=x, y=yhat)) +
+  geom_line()# +
+  geom_point(data=dfSubSample, mapping=aes(x=x, y=y), color="red")
+print(g)
+x <- 0:1
+dat <- data.frame(x, y=2*x*(1-x))
+f <- function(x) y=2*x*(1-x)
+dat2<-data.frame(x,y=x^2)
+f2<- function(x) x^2
+dat3<-data.frame(x, y=(1-x)^2)
+f3<-function(x) (1-x)^2
+ggplot(dat, aes(x,y)) + 
+  geom_point(data=freq652, alpha=0.1,aes(x = F1freq_652, y = f1_hetfreq_652),color="purple",position="jitter")+
+  geom_point(data=freq652, alpha=0.1,aes(F1freq_652, f1_homreffreq_652),color="blue",position="jitter")+
+  geom_point(data=freq652, alpha=0.1,aes(F1freq_652, f1_homaltfreq_652),color="red",position="jitter")+
+  
+  stat_function(fun=f, colour="purple")+
+  stat_function(fun=f2,colour="red")+
+  stat_function(fun=f3, colour="blue")+theme_bw()
 
