@@ -263,6 +263,26 @@ return(freqcomp_652)
 }
 freq652<-freq_func("bigfamily02910_just652_F0_AF.afreq", "bigfamily02910_just652_F1_AF.afreq","bigfamily02910_just652_F1.recode.vcf_genocounts.gcount")
 freqall<-freq_func("CA2019parentsandF1_GATHERED_biSNPs_F0only_AF.afreq", "CA2019parentsandF1_GATHERED_biSNPs_F1only_AF.afreq","CA2019parentsandF1_GATHERED_biSNPs_F1only_genocount.gcount")
+#freq_2020foursib_all<-freq_func("foursibs2020_F0_AF.afreq", "foursibs2020_F1_AF.afreq","foursibs2020_F1.recode.vcf_genocounts.gcount")
+freq2020<-freq_func("F0_2020_just652_AF.afreq","F1_2020_just652_AF.afreq","F1_2020_without7and8_just652.recode.vcf_genocounts.gcount")
+comb<-rbind(freq652,freqall)
+comb$label<-c(rep("sharedout",nrow(freq652)),rep("allsnps",nrow(freqall)))
+ggplot() +
+  geom_histogram(data=subset(freq652,F0freq_652==0.5), aes(x=F1freq_652),alpha=0.5)+
+  geom_density(data=subset(freqall, F0freq_652==0.5),color="red",aes(x=F1freq_652))+theme_classic()
+bigfam0.5<-ggplot(subset(comb,F0freq_652==0.5), aes(x=F1freq_652,fill=label))+
+  geom_density(alpha=0.7,adjust=2,bw=0.003)+ylim(0,50)+
+  scale_fill_manual(values=c("red","blue"))+scale_color_manual(values=c("red","blue"))+ theme_classic()
+bigfam0.25<-ggplot(subset(comb,F0freq_652==0.25), aes(x=F1freq_652,fill=label))+
+  geom_density(alpha=0.7,adjust=2,bw=0.003)+ylim(0,50)+
+  scale_fill_manual(values=c("red","blue"))+scale_color_manual(values=c("red","blue"))+ theme_classic()
+bigfam0.75<-ggplot(subset(comb,F0freq_652==0.75), aes(x=F1freq_652,fill=label))+
+  geom_density(alpha=0.7,adjust=2,bw=0.003)+ylim(0,50)+
+  scale_fill_manual(values=c("red","blue"))+scale_color_manual(values=c("red","blue"))+ theme_classic()
+
+bigfam_mendel<-bigfam0.25 / bigfam0.5 / bigfam0.75
+ggsave("bigfam_mendel_20220426.png", bigfam_mendel,
+       width = 8, height = 6, dpi = 300, units = "in", device='png')
 af_combined<- freq652 | freqall
 ggsave("af_plots_violin_20220419.png",af_combined,
        width = 8, height = 5, dpi = 300, units = "in", device='png')
@@ -558,7 +578,36 @@ ggsave(filename = "densities_diff.png", density2019_diff / density2020_diff,
 wholeframe_sharedoutliers<-subset(wholeframe,cohort=="sharedoutlier")
 wholeframe_sharedoutliers$diff2019<-wholeframe_sharedoutliers$F1_2019_afreq-wholeframe_sharedoutliers$F0_2019_afreq
 wholeframe_sharedoutliers$diff2020<-wholeframe_sharedoutliers$F1_2020_afreq-wholeframe_sharedoutliers$F0_2020_afreq
+wholeframe$diff2019abs<-abs(wholeframe$diff2019)
+wholeframe$diff2020abs<-abs(wholeframe$diff2020)
+wholeframe_sharedoutliers$diff2019abs<-abs(wholeframe_sharedoutliers$diff2019)
+wholeframe_sharedoutliers$diff2020abs<-abs(wholeframe_sharedoutliers$diff2020)
 
+mean2019abs<-mean(wholeframe$diff2019abs)
+mean2020abs<-mean(wholeframe$diff2020abs)
+sd2019abs<-sd(wholeframe$diff2019abs)
+sd2020abs<-sd(wholeframe$diff2020abs)
+
+mean2019abs_shared<-mean(wholeframe_sharedoutliers$diff2019abs)
+mean2020abs_shared<-mean(wholeframe_sharedoutliers$diff2020abs)
+sd2019abs_shared<-sd(wholeframe_sharedoutliers$diff2019abs)
+sd2020abs_shared<-sd(wholeframe_sharedoutliers$diff2020abs)
+
+absdiffsframe<-data.frame(means=c(mean2019abs, mean2020abs, mean2019abs_shared, mean2020abs_shared),
+           sds=c(sd2019abs, sd2020abs, sd2019abs_shared, sd2020abs_shared),
+           year=c("2019","2020","2019","2020"),
+           type=c("All SNPs","All SNPs","652 outliers","652 outliers"))
+ggplot(absdiffsframe, aes(x=year, y=means, color=type))+
+  geom_point(position=position_dodge(width=0.3))+
+  geom_errorbar(aes(ymin=means-(sds*2), ymax=means+(sds*2)),
+                width=0.1, position=position_dodge(width=0.3))+
+  scale_color_manual(values=c("black","red"))+ylab("Absolute change in allele frequency from spawners to offspring")+
+  #scale_y_continuous(expand = c(0,0.00))+
+  theme(axis.line = element_line(colour = "black"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.background = element_blank()) 
 all<-ggplot(wholeframe, aes(x=diff2019,y=diff2020,color=cohort))+
   geom_point(size=1,alpha=0.5)+
   scale_color_manual(values=c("firebrick1","dodgerblue1","azure3","darkslateblue"))+
@@ -645,29 +694,56 @@ ggsave(filename="trulyoutliers",ggplot(fst2020cleaned, aes(x = chr_pos, y = WEIR
   
    theme_bw())
 types<-c("nonsynonymous","synonymous","upstream","downstream","other")
+types2<-c("nonsynonymous","synonymous","regulatory")
+types3<-c("nonsynonymous","synonymous")
+
 trulysharedcounts<-c(15,26,173,122,(652-15-26-173-122))#,195,115,1,5)
+trulysharedcounts2<-c(15,26,(173+122+(652-15-26-173-122)))#,195,115,1,5)
+trulysharedcounts3<-c(15,26)
 fullvcfcounts<-c((681058+15878),570759,4882356,4874418, 
                  (16943427-681058-15878-570759-4882356-4874418))
+fullvcfcounts2<-c((681058+15878),570759,(4882356+4874418+ 
+                 (16943427-681058-15878-570759-4882356-4874418)))
+fullvcfcounts3<-c((681058+15878),570759)
 trulyshared_increasecounts<-c(3,1,20,19,0)
 trulyshared_decreasecounts<-c(12,25,153,103,0)#,165,112,1)
 
 full_v_truly<-data.frame(fullvcfcounts,trulysharedcounts)
+full_v_truly2<-data.frame(fullvcfcounts2,trulysharedcounts2)
+full_v_truly3<-data.frame(fullvcfcounts3,trulysharedcounts3)
+
 truly_v_decrease<-data.frame(trulysharedcounts, trulyshared_decreasecounts)
 truly_v_increase<-data.frame(trulysharedcounts, trulyshared_increasecounts)
 decrease_v_increase<-data.frame(trulyshared_decreasecounts, trulyshared_increasecounts)
 
 chisq.test(full_v_truly)
+chisq.test(full_v_truly2)
+chisq.test(full_v_truly3)
+
 chisq.test(truly_v_decrease)
 chisq.test(truly_v_increase)
 chisq.test(decrease_v_increase)
 fullvcfpercent<-fullvcfcounts/16943427
 trulysharedpercent<-trulysharedcounts/652
+
+fullvcfpercent2<-fullvcfcounts2/16943427
+trulysharedpercent2<-trulysharedcounts2/652
+
+fullvcfpercent3<-fullvcfcounts3/16943427
+trulysharedpercent3<-trulysharedcounts3/652
+
 trulyshared_decreasepercent<-trulyshared_decreasecounts/576
 trulyshared_increasepercent<-trulyshared_increasecounts/76
 
 chiframe<-data.frame("percent"=100*(c(fullvcfpercent,trulysharedpercent, trulyshared_decreasepercent, trulyshared_increasepercent)),"types"=rep(types,4),
                      "dataset"=c(rep("all SNPs",length(types)),rep("shared outliers",length(types)),
                                  rep("shared outliers DECREASE FREQ",length(types)),rep("shared outliers INCREASE FREQ",length(types))))
+
+chiframe_2<-data.frame("percent"=100*(c(fullvcfpercent2,trulysharedpercent2)),"types"=rep(types2,2),
+                     "dataset"=c(rep("all SNPs",length(types2)),rep("shared outliers",length(types2))))
+chiframe_3<-data.frame("percent"=100*(c(fullvcfpercent3,trulysharedpercent3)),"types"=rep(types3,2),
+                       "dataset"=c(rep("all SNPs",length(types3)),rep("shared outliers",length(types3))))
+
 chiframe2<-data.frame("counts"=c(trulysharedcounts, trulyshared_decreasecounts,trulyshared_increasecounts),"types"=rep(types,3),
                      "dataset"=c(rep("all shared outliers",length(types)),rep("shared outliers DECREASE FREQ",length(types)),rep("shared outliers INCREASE FREQ",length(types))))
 chiframecounts<-data.frame("counts"=c(fullvcfcounts,trulysharedcounts, trulyshared_decreasecounts, trulyshared_increasecounts),"types"=rep(types,4),
@@ -691,6 +767,13 @@ ggsave(file="SNPtypespercents20211019.png",ggplot(chiframe,aes(x=dataset,y=perce
   theme_bw(),
   width = 8, height = 6, dpi = 300, units = "in", device='png')
 
+ggsave(file="SNPtypespercents20220503.png",ggplot(chiframe_2,aes(x=dataset,y=percent,color=types))+
+         geom_bar(stat="identity",aes(fill=types),position="dodge")+scale_y_continuous(trans='log10')+
+         theme_bw(),
+       width = 8, height = 6, dpi = 300, units = "in", device='png')
+ggplot(chiframe_3,aes(x=dataset,y=percent,color=types))+
+  geom_bar(stat="identity",aes(fill=types),position="dodge")+
+  theme_bw()
 #plink heatmap
 cluster1 <- read.csv("plink.genome.editednames.csv", header = TRUE)
 pairs_c1 <- cluster1[,c(1,3,10)]
@@ -817,11 +900,22 @@ f2<- function(x) x^2
 dat3<-data.frame(x, y=(1-x)^2)
 f3<-function(x) (1-x)^2
 ggplot(dat, aes(x,y)) + 
-  geom_point(data=freq652, alpha=0.1,aes(x = F1freq_652, y = f1_hetfreq_652),color="purple",position="jitter")+
-  geom_point(data=freq652, alpha=0.1,aes(F1freq_652, f1_homreffreq_652),color="blue",position="jitter")+
-  geom_point(data=freq652, alpha=0.1,aes(F1freq_652, f1_homaltfreq_652),color="red",position="jitter")+
-  
-  stat_function(fun=f, colour="purple")+
-  stat_function(fun=f2,colour="red")+
-  stat_function(fun=f3, colour="blue")+theme_bw()
 
+  #geom_point(data=freq2020, alpha=0.1,aes(x = F1freq_652, y = f1_hetfreq_652),color="darkgoldenrod",position=position_jitter(width=0.01, height=0.01),size=2)+
+  #geom_point(data=freq2020, alpha=0.1,aes(F1freq_652, f1_homreffreq_652),color="blue4",position=position_jitter(width=0.01, height=0.01),size=2)+
+  #geom_point(data=freq2020, alpha=0.1,aes(F1freq_652, f1_homaltfreq_652),color="red",position=position_jitter(width=0.01, height=0.01),size=2)+
+  stat_function(fun=f, colour="darkgoldenrod", size=0.5)+
+  stat_function(fun=f2,colour="red", size=0.5)+
+  stat_function(fun=f3, colour="blue4", size=0.5)+
+  xlab("alt allele frequency")+ylab("genotype frequency")+
+  
+  #geom_hline(yintercept=0)+geom_vline(xintercept=0)+
+  theme_bw()
+  scale_y_continuous(expand = c(0,0.00))+scale_x_continuous(expand=c(0,0))+
+  theme(axis.line = element_line(colour = "black"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        panel.background = element_blank()) 
+
+freq652$difference<-abs(freq652$F1freq_652-freq652$F0freq_652)
