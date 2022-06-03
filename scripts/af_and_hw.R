@@ -39,30 +39,27 @@ freq_func<-function(afreq_1, afreq_2, f1_genocounts) {
   freqcomp<-data.frame(F0freq, F1freq, "chrom"=afreq_1$X.CHROM,"pos"=afreq_1$POS,
                            f1_homreffreq, f1_hetfreq, f1_homaltfreq, F1_alt_counts, F1_ref_counts)
   
-  trimmed<-subset(freqcomp, 0 < F0freq & F0freq < 1)
-  chi_null=rep("A",nrow(trimmed))
-  for (i in 1:nrow(trimmed)) {
-    obs_vec<-c(trimmed[i,]$F1_alt_counts, trimmed[i,]$F1_ref_counts)
-    exp_vec<-c(trimmed[i,]$expected_alt_count, trimmed[i,]$expected_ref_count)
-    if (trimmed$F0freq[i] == 0.25) {
-      chi_p <- chisq.test(obs_vec, p=c(1/4,3/4)) } else if (trimmed$F0freq[i] == 0.5) {
-      chi_p <- chisq.test(obs_vec, p=c(1/2, 1/2)) } else if (trimmed$F0freq[i]==0.75) {
-      chi_p <- chisq.test(obs_vec, p=c(3/4, 1/4)) }  
+  #trimmed<-subset(freqcomp, 0 < F0freq & F0freq < 1)
+  #chi_null=rep("A",nrow(trimmed))
+  #for (i in 1:nrow(trimmed)) {
+  #  obs_vec<-c(trimmed[i,]$F1_alt_counts, trimmed[i,]$F1_ref_counts)
+  #  exp_vec<-c(trimmed[i,]$expected_alt_count, trimmed[i,]$expected_ref_count)
+  #  if (trimmed$F0freq[i] == 0.25) {
+  #    chi_p <- chisq.test(obs_vec, p=c(1/4,3/4)) } else if (trimmed$F0freq[i] == 0.5) {
+  #    chi_p <- chisq.test(obs_vec, p=c(1/2, 1/2)) } else if (trimmed$F0freq[i]==0.75) {
+  #    chi_p <- chisq.test(obs_vec, p=c(3/4, 1/4)) }  
+  #
+  #  chi_null[i]<-chi_p$p.value
+  #  }  
   
-    chi_null[i]<-chi_p$p.value
-    }  
-  
-  trimmed$chi_null<-as.numeric(as.character(chi_null))
-  print(nrow(subset(trimmed, chi_null>=0.05)))
-  #return(freqcomp)
-  return(trimmed)
+  #trimmed$chi_null<-as.numeric(as.character(chi_null))
+  #print(nrow(subset(trimmed, chi_null>=0.05)))
+  return(freqcomp)
+  #return(trimmed)
 }
 
 freq_1<-freq_func(afreq_1, afreq_2, f1_genocounts)
 freq_2<-freq_func(afreq_1_652, afreq_2_652, f1_genocounts_652)
-freq_3<-freq_func(read.delim("../foursibs2020_F0_AF.afreq",header=TRUE), read.delim("../foursibs2020_F1_AF.afreq"), read.delim("../foursibs2020_F1.recode.vcf_genocounts.gcount"))
-freq_4<-freq_func(read.delim("../foursibs2020_just652_F0_AF.afreq"), read.delim("../foursibs2020_just652_F1_AF.afreq"), read.delim("../foursibs2020_just652_F1.recode.vcf_genocounts.gcount"))
-
 #when the "return" is "trimmed":
 mendel_filename1<-paste0("mendel_all_",plotname,".txt")
 write.table(freq_1,file=mendel_filename1,quote=FALSE, row.names=FALSE, sep = "\t")
@@ -108,29 +105,10 @@ bigfam0.75<-ggplot(subset(comb,F0freq==0.75), aes(x=F1freq,fill=label))+
   geom_density(alpha=0.4,adjust=2,bw=0.003)+ylim(0,40)+
   scale_fill_manual(values=c("red","blue"))+scale_color_manual(values=c("red","blue"))+ theme_classic()
 
-#bigfam_mendel<-bigfam0.25 / bigfam0.5 / bigfam0.75
-#mendel_plotname<-paste0("mendel_",plotname,".png")
-
-comb2<-rbind(freq_1,freq_2)
-comb2$label<-c(rep("allsnps",nrow(freq_1)),rep("just652",nrow(freq_2)))
-
-bigfam20.5<-ggplot(subset(comb2,F0freq==0.5), aes(x=F1freq,fill=label))+
-  geom_density(alpha=0.4,adjust=2,bw=0.003)+ylim(0,40)+
-  scale_fill_manual(values=c("red","blue"))+scale_color_manual(values=c("red","blue"))+ theme_classic()
-bigfam20.25<-ggplot(subset(comb2,F0freq==0.25), aes(x=F1freq,fill=label))+
-  geom_density(alpha=0.4,adjust=2,bw=0.003)+ylim(0,40)+
-  scale_fill_manual(values=c("red","blue"))+scale_color_manual(values=c("red","blue"))+ theme_classic()
-bigfam20.75<-ggplot(subset(comb2,F0freq==0.75), aes(x=F1freq,fill=label))+
-  geom_density(alpha=0.4,adjust=2,bw=0.003)+ylim(0,40)+
-  scale_fill_manual(values=c("red","blue"))+scale_color_manual(values=c("red","blue"))+ theme_classic()
-
-#bigfam2_mendel<-bigfam20.25 / bigfam20.5 / bigfam20.75
-bothfams<- bigfam0.25+labs(tag = "A.") / bigfam0.5 +labs(tag = "B.")/ bigfam0.75 +labs(tag = "C.")/ bigfam20.25+labs(tag = "D.") / bigfam20.5+labs(tag = "E.") / bigfam20.75+labs(tag = "E.")
+bigfam_mendel<-bigfam0.25 / bigfam0.5 / bigfam0.75
 mendel_plotname<-paste0("mendel_",plotname,".png")
-
-
-ggsave(bothfams, bigfam_mendel,
-       width = 8, height = 12, dpi = 300, units = "in", device='png')
+#ggsave(mendel_plotname, bigfam_mendel,
+#       width = 8, height = 6, dpi = 300, units = "in", device='png')
 
 af_combined<- af_plot_freq1 | af_plot_freq2
 hw_combined<- hw_plot_freq1 | hw_plot_freq2
