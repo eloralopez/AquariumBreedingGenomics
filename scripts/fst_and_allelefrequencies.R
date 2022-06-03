@@ -231,6 +231,9 @@ ggsave(filename = "hardyweinberg2019bigfamilyallsnps.png",ggplot(freqcomp) +
   theme_bw(),
   width = 8, height = 5, dpi = 300, units = "in", device='png')
 ##just 652 snps:
+afreq_1<-"bigfamily02910_just652_F0_AF.afreq"
+afreq_2<-"bigfamily02910_just652_F1_AF.afreq"
+genocounts<-"bigfamily02910_just652_F1.recode.vcf_genocounts.gcount"
 freq_func<-function(afreq_1, afreq_2, genocounts) {
 freq_2019bigfamily_F0_652<-read.delim(afreq_1,header=TRUE)
 freq_2019bigfamily_F1_652<-read.delim(afreq_2,header=TRUE)
@@ -242,9 +245,36 @@ F1freq_652<-freq_2019bigfamily_F1_652$ALT_FREQS
 f1_homreffreq_652<-f1_genocounts_652$HOM_REF_CT/(f1_genocounts_652$HOM_REF_CT+f1_genocounts_652$HET_REF_ALT_CTS+f1_genocounts_652$TWO_ALT_GENO_CTS)
 f1_hetfreq_652<-f1_genocounts_652$HET_REF_ALT_CTS/(f1_genocounts_652$HOM_REF_CT+f1_genocounts_652$HET_REF_ALT_CTS+f1_genocounts_652$TWO_ALT_GENO_CTS)
 f1_homaltfreq_652<-f1_genocounts_652$TWO_ALT_GENO_CTS/(f1_genocounts_652$HOM_REF_CT+f1_genocounts_652$HET_REF_ALT_CTS+f1_genocounts_652$TWO_ALT_GENO_CTS)
+F1_alt_counts<-round(freq_2019bigfamily_F1_652$ALT_FREQS*freq_2019bigfamily_F1_652$OBS_CT,digits=0)
+F1_ref_counts<-freq_2019bigfamily_F1_652$OBS_CT-round(freq_2019bigfamily_F1_652$ALT_FREQS*freq_2019bigfamily_F1_652$OBS_CT,digits=0)
+
+
 
 freqcomp_652<-data.frame(F0freq_652, F1freq_652, "chrom"=freq_2019bigfamily_F0_652$X.CHROM,"pos"=freq_2019bigfamily_F0_652$POS,
-                     f1_homreffreq_652, f1_hetfreq_652, f1_homaltfreq_652)
+                     f1_homreffreq_652, f1_hetfreq_652, f1_homaltfreq_652, F1_alt_counts, F1_ref_counts)
+freqcomp_652$expected_alt_count<-freqcomp_652$F0freq_652*freq_2019bigfamily_F1_652$OBS_CT
+freqcomp_652$expected_ref_count<-(1-freqcomp_652$F0freq_652)*freq_2019bigfamily_F1_652$OBS_CT
+
+trimmed<-subset(freqcomp_652, 0 < F0freq_652 & F0freq_652 < 1)
+chi_null=rep("A",nrow(trimmed))
+chi_p=NULL
+for (i in 1:nrow(trimmed)) {
+  obs_vec<-c(trimmed[i,]$F1_alt_counts, trimmed[i,]$F1_ref_counts)
+  exp_vec<-c(trimmed[i,]$expected_alt_count, trimmed[i,]$expected_ref_count)
+  if (trimmed$F0freq_652[i] == 0.25) {
+    chi_p <- chisq.test(obs_vec, p=c(1/4,3/4)) } else if (trimmed$F0freq_652[i] == 0.5) {
+    chi_p <- chisq.test(obs_vec, p=c(1/2, 1/2)) } else if (trimmed$F0freq_652[i]==0.75) {
+      chi_p <- chisq.test(obs_vec, p=c(3/4, 1/4)) }  
+  
+  chi_null[i]<-chi_p$p.value
+    }  
+    
+trimmed$chi_null<-as.numeric(as.character(chi_null))
+  x54_v2<-chisq.test(obs_vec, p=c(1/2,1/2))
+  chisq405<-data.frame(obs_vec, exp_vec)
+  
+  x54_v2<-chisq.test(obs_vec, p=c(1/2,1/2))
+}
 just652hw_plot<-ggplot(freqcomp_652) +
   geom_point(data=freqcomp_652, alpha=0.1,aes(x = F1freq_652, y = f1_hetfreq_652),color="green",position="jitter")+
   geom_point(data=freqcomp_652, alpha=0.1,aes(F1freq_652, f1_homreffreq_652),color="blue",position="jitter")+
@@ -265,6 +295,11 @@ freq652<-freq_func("bigfamily02910_just652_F0_AF.afreq", "bigfamily02910_just652
 freqall<-freq_func("CA2019parentsandF1_GATHERED_biSNPs_F0only_AF.afreq", "CA2019parentsandF1_GATHERED_biSNPs_F1only_AF.afreq","CA2019parentsandF1_GATHERED_biSNPs_F1only_genocount.gcount")
 #freq_2020foursib_all<-freq_func("foursibs2020_F0_AF.afreq", "foursibs2020_F1_AF.afreq","foursibs2020_F1.recode.vcf_genocounts.gcount")
 freq2020<-freq_func("F0_2020_just652_AF.afreq","F1_2020_just652_AF.afreq","F1_2020_without7and8_just652.recode.vcf_genocounts.gcount")
+freq652$F1freq2020<-freq2020$F1freq_652
+only652<-read.delim("bigfamily02910_just652_F1_AF.afreq")
+ggplot()+
+  geom_point(data=freq652, aes(x=F1freq_652,y=F1freq2020),position=position_jitter(width=0.01, height=0.01))+
+  theme_bw()
 comb<-rbind(freq652,freqall)
 comb$label<-c(rep("sharedout",nrow(freq652)),rep("allsnps",nrow(freqall)))
 ggplot() +
@@ -439,8 +474,8 @@ density2019<-ggplot(data=fst2019cleaned, aes(x= WEIR_AND_COCKERHAM_FST, ..densit
   scale_color_manual(values = c("blue","blue"))+
   xlim(-0.332,1)+
   ylim(0,80)+
-  geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.15), y=12.0), label="mean FST")+
-  geom_text(aes(x=(cutoff2019+0.15),y=12), label = "99th percentile")+
+  geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.06), y=40.0), label="mean = 0.02")+
+  geom_text(aes(x=(cutoff2019+0.06),y=40), label = "99th percentile \n = 0.47")+
   
   theme_bw()+
   theme(legend.position="none")
@@ -453,12 +488,15 @@ density2020<-ggplot(data=fst2020cleaned, aes(x= WEIR_AND_COCKERHAM_FST, ..densit
   scale_color_manual(values = c("red","red"))+
   xlim(-0.332,1)+
   ylim(0,80)+
-  geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.15), y=12.0), label="mean FST")+
-  geom_text(aes(x=(cutoff2020+0.15),y=12), label = "99th percentile")+
+  geom_text(aes(x=(mean(na.omit(WEIR_AND_COCKERHAM_FST))+0.06), y=40.0), label="mean = 0.01")+
+  geom_text(aes(x=(cutoff2020+0.061),y=40), label = "99th percentile \n = 0.25")+
   theme_bw()+
   theme(legend.position="none")
-ggsave(filename = "densities20220419.png", density2019 / density2020,
+#density2019 / density2020
+ggsave(filename = "densities20220524.png", density2019 / density2020,
        width = 13.33, height = 7.5, dpi = 300, units = "in", device='png')
+
+
 testfunction<-function(test,cutoff2019) {
   if (test=="NaN") {
     g = "background"
@@ -587,16 +625,26 @@ mean2019abs<-mean(wholeframe$diff2019abs)
 mean2020abs<-mean(wholeframe$diff2020abs)
 sd2019abs<-sd(wholeframe$diff2019abs)
 sd2020abs<-sd(wholeframe$diff2020abs)
+median2019abs<-median(wholeframe$diff2019abs)
+median2020abs<-median(wholeframe$diff2020abs)
 
 mean2019abs_shared<-mean(wholeframe_sharedoutliers$diff2019abs)
 mean2020abs_shared<-mean(wholeframe_sharedoutliers$diff2020abs)
 sd2019abs_shared<-sd(wholeframe_sharedoutliers$diff2019abs)
 sd2020abs_shared<-sd(wholeframe_sharedoutliers$diff2020abs)
+median2019abs_shared<-median(wholeframe_sharedoutliers$diff2019abs)
+median2020abs_shared<-median(wholeframe_sharedoutliers$diff2020abs)
+
 
 absdiffsframe<-data.frame(means=c(mean2019abs, mean2020abs, mean2019abs_shared, mean2020abs_shared),
            sds=c(sd2019abs, sd2020abs, sd2019abs_shared, sd2020abs_shared),
            year=c("2019","2020","2019","2020"),
            type=c("All SNPs","All SNPs","652 outliers","652 outliers"))
+ggplot()+
+  geom_density(data=wholeframe, aes(x=diff2019abs))+
+  geom_density(data=wholeframe, aes(x=diff2020abs),color="red")+theme_bw()+
+  geom_density(data=wholeframe_sharedoutliers, aes(x=diff2020abs),color="pink")#+
+  geom_density(data=wholeframe_sharedoutliers, aes(x=diff2019abs),color="blue")
 ggplot(absdiffsframe, aes(x=year, y=means, color=type))+
   geom_point(position=position_dodge(width=0.3))+
   geom_errorbar(aes(ymin=means-(sds*2), ymax=means+(sds*2)),
@@ -609,7 +657,7 @@ ggplot(absdiffsframe, aes(x=year, y=means, color=type))+
         panel.border = element_blank(),
         panel.background = element_blank()) 
 all<-ggplot(wholeframe, aes(x=diff2019,y=diff2020,color=cohort))+
-  geom_point(size=1,alpha=0.5)+
+  geom_point(size=1,alpha=0.1, position=position_jitter(width=0.01, height=0.01))+
   scale_color_manual(values=c("firebrick1","dodgerblue1","azure3","darkslateblue"))+
   geom_hline(yintercept=0)+
   geom_vline(xintercept = 0)+
@@ -618,7 +666,7 @@ all<-ggplot(wholeframe, aes(x=diff2019,y=diff2020,color=cohort))+
   xlim(-0.8,0.8)+ylim(-0.8,0.8)+
   theme_bw()
 nobg<-ggplot(subset(wholeframe,cohort!="background"), aes(x=diff2019,y=diff2020,color=cohort))+
-  geom_point(size=1,alpha=0.5)+
+  geom_point(size=1,alpha=0.1, position=position_jitter(width=0.01, height=0.01))+
   scale_color_manual(values=c("firebrick1","dodgerblue1","darkslateblue"))+
   geom_hline(yintercept=0)+
   geom_vline(xintercept = 0)+
@@ -627,7 +675,7 @@ nobg<-ggplot(subset(wholeframe,cohort!="background"), aes(x=diff2019,y=diff2020,
   xlim(-0.8,0.8)+ylim(-0.8,0.8)+
   theme_bw()
 shared<-ggplot(subset(wholeframe,cohort=="sharedoutlier"), aes(x=diff2019,y=diff2020,color=cohort))+
-  geom_point(size=1,alpha=0.5)+
+  geom_point(size=1,alpha=0.1, position=position_jitter(width=0.01, height=0.01))+
   scale_color_manual(values=c("darkslateblue"))+
   geom_hline(yintercept=0)+
   geom_vline(xintercept = 0)+
@@ -729,8 +777,8 @@ trulysharedpercent<-trulysharedcounts/652
 fullvcfpercent2<-fullvcfcounts2/16943427
 trulysharedpercent2<-trulysharedcounts2/652
 
-fullvcfpercent3<-fullvcfcounts3/16943427
-trulysharedpercent3<-trulysharedcounts3/652
+fullvcfpercent3<-fullvcfcounts3/sum(fullvcfcounts3)
+trulysharedpercent3<-trulysharedcounts3/sum(trulysharedcounts3)
 
 trulyshared_decreasepercent<-trulyshared_decreasecounts/576
 trulyshared_increasepercent<-trulyshared_increasecounts/76
@@ -741,8 +789,8 @@ chiframe<-data.frame("percent"=100*(c(fullvcfpercent,trulysharedpercent, trulysh
 
 chiframe_2<-data.frame("percent"=100*(c(fullvcfpercent2,trulysharedpercent2)),"types"=rep(types2,2),
                      "dataset"=c(rep("all SNPs",length(types2)),rep("shared outliers",length(types2))))
-chiframe_3<-data.frame("percent"=100*(c(fullvcfpercent3,trulysharedpercent3)),"types"=rep(types3,2),
-                       "dataset"=c(rep("all SNPs",length(types3)),rep("shared outliers",length(types3))))
+chiframe_3<-data.frame("percent"=100*(c(fullvcfpercent3,trulysharedpercent3)),"Type"=rep(types3,2),
+                       "dataset"=c(rep("All SNPs",length(types3)),rep("Shared Outliers",length(types3))))
 
 chiframe2<-data.frame("counts"=c(trulysharedcounts, trulyshared_decreasecounts,trulyshared_increasecounts),"types"=rep(types,3),
                      "dataset"=c(rep("all shared outliers",length(types)),rep("shared outliers DECREASE FREQ",length(types)),rep("shared outliers INCREASE FREQ",length(types))))
@@ -771,9 +819,21 @@ ggsave(file="SNPtypespercents20220503.png",ggplot(chiframe_2,aes(x=dataset,y=per
          geom_bar(stat="identity",aes(fill=types),position="dodge")+scale_y_continuous(trans='log10')+
          theme_bw(),
        width = 8, height = 6, dpi = 300, units = "in", device='png')
-ggplot(chiframe_3,aes(x=dataset,y=percent,color=types))+
-  geom_bar(stat="identity",aes(fill=types),position="dodge")+
-  theme_bw()
+ggsave(file="codingSNPs20220524.png",ggplot(chiframe_3,aes(x=dataset,y=percent,color=Type))+
+  geom_bar(stat="identity",aes(fill=Type),position="dodge")+
+  theme_bw()+
+  theme(axis.text=element_text(size=15),
+        axis.text.x=element_text(size=15),
+        axis.title=element_text(size=15))+
+  theme(legend.text=element_text(size=15),legend.title=element_text(size=15),
+        plot.title=element_text(size=15))+
+  xlab("")+ylab("Percent of coding SNPs"),
+  width = 8, height = 6, dpi = 300, units = "in", device='png')
+
+
+
+### chisq of h-w violations
+
 #plink heatmap
 cluster1 <- read.csv("plink.genome.editednames.csv", header = TRUE)
 pairs_c1 <- cluster1[,c(1,3,10)]
@@ -919,3 +979,7 @@ ggplot(dat, aes(x,y)) +
         panel.background = element_blank()) 
 
 freq652$difference<-abs(freq652$F1freq_652-freq652$F0freq_652)
+theor2020<-rnorm(10000, mean=0.25, sd=1/8)
+ggplot()+
+  geom_density(data=data.frame(theor2020),aes(x=theor2020))+
+  xlim(0,1)
