@@ -1,0 +1,121 @@
+
+#trim adapters through indexing bamfile (where $1 is the sample identifier)
+conda activate gat4k
+trimmomatic PE $1_L001_R1_001.fastq.gz $1_L001_R2_001.fastq.gz $1_forward_paired.fq.gz  $1_forward_unpaired.fq.gz $1_reverse_paired.fq.gz $1_reverse_unpaired.fastq.gz ILLUMINACLIP:/home/elopez-nandam/miniconda3/pkgs/trimmomatic-0.39-hdfd78af_2/share/trimmomatic/adapters/TruSeq3-PE.fa:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36
+
+#map, convert to bam, sort:
+conda activate bwa_and_samtools
+bwa mem -M -t 2 ~/Ahyacinthusv1reference/annotationsv1/Ahyacinthus.chrsV1.fasta $1_forward_paired.fq.gz $1_reverse_paired.fq.gz 2> bwa_$1.err | samtools view -bS | samtools sort > $1.UNDEDUP.bam
+
+#mark duplicates:
+conda activate gat4k
+picard MarkDuplicates REMOVE_DUPLICATES=true INPUT=$1.UNDEDUP.bam OUTPUT=$1.bam METRICS_FILE=./picardmetrics/$1.metrics.txt VALIDATION_STRINGENCY=LENIENT -XX:ParallelGCThreads=3
+
+#add RG:
+conda activate gat4k
+picard AddOrReplaceReadGroups \
+    I= $1.bam \
+    O= $1_RG.bam \
+    RGLB= $1 \
+    RGSM= $1 \
+    RGPL= ILLUMINA \
+    RGPU= 1
+
+#index with new RG:
+conda activate bwa_and_samtools
+samtools index $1_RG.bam
+
+#haplotypecall (where $1 is the sample identifier and $2 is the chromosome):
+
+conda activate gat4k
+gatk HaplotypeCaller \
+    -R  ~/Ahyacinthusv1reference/annotationsv1/Ahyacinthus.chrsV1.fasta \
+    -I $1_RG.bam \
+    -ERC GVCF \
+    -L $2 \
+    -O $1_$2.g.vcf
+
+#combine VCFs through filtering down to biSNPs (where $1 is the chromosome)
+ conda activate gat4k
+ gatk CombineGVCFs \
+     -R ~/Ahyacinthusv1reference/annotationsv1/Ahyacinthus.chrsV1.fasta \
+     --variant CA2019-10_S114_$1.g.vcf \
+     --variant CA2019-11_S115_$1.g.vcf \
+     --variant CA2019-12_S116_$1.g.vcf \
+     --variant CA2019-13_S117_$1.g.vcf \
+     --variant CA2019-14_S118_$1.g.vcf \
+     --variant CA2019-15_S119_$1.g.vcf \
+     --variant CA2019-16_S120_$1.g.vcf \
+     --variant CA2019-17_S121_$1.g.vcf \
+     --variant CA2019-18_S122_$1.g.vcf \
+     --variant CA2019-19_S123_$1.g.vcf \
+     --variant CA2019-1_S105_$1.g.vcf \
+     --variant CA2019-20_S124_$1.g.vcf \
+     --variant CA2019-21_S125_$1.g.vcf \
+     --variant CA2019-22_S126_$1.g.vcf \
+     --variant CA2019-24_S127_$1.g.vcf \
+     --variant CA2019-2_S106_$1.g.vcf \
+     --variant CA2019-3_S107_$1.g.vcf \
+     --variant CA2019-4_S108_$1.g.vcf \
+     --variant CA2019-5_S109_$1.g.vcf \
+     --variant CA2019-6_S110_$1.g.vcf \
+     --variant CA2019-7_S111_$1.g.vcf \
+     --variant CA2019-8_S112_$1.g.vcf \
+      --variant CA2019-9_S113_$1.g.vcf \
+      --variant CA2020-10_S104_$1.g.vcf \
+      --variant CA2020-1_S95_$1.g.vcf \
+      --variant CA2020-2_S96_$1.g.vcf \
+      --variant CA2020-4_S98_$1.g.vcf \
+      --variant CA2020-5_S99_$1.g.vcf \
+      --variant CA2020-6_S100_$1.g.vcf \
+      --variant CA2020-7_S101_$1.g.vcf \
+      --variant CA2020-8_S102_$1.g.vcf \
+      --variant CA2020-9_S103_$1.g.vcf \
+      --variant CA57_S89_$1.g.vcf \
+      --variant CA58_S90_$1.g.vcf \
+      --variant CA62_S91_$1.g.vcf \
+      --variant CA70_S84_$1.g.vcf \
+      --variant CA71_S85_$1.g.vcf \
+      --variant CA72_S86_$1.g.vcf \
+      --variant CA73_S87_$1.g.vcf \
+      --variant CA76_S92_$1.g.vcf \
+      --variant CA77_S93_$1.g.vcf \
+      --variant CA79_S94_$1.g.vcf \
+      --variant CA80_S88_$1.g.vcf \
+      --variant CAP12-1_S46_$1.g.vcf \
+      --variant CAP22-2_S59_$1.g.vcf \
+      --variant CAP9-1_S48_$1.g.vcf \
+      --variant DTG-OmniC-238_$1.g.vcf \
+      --variant ../December2021_spawn/CA2020-11_S11_$1.g.vcf \
+      --variant ../December2021_spawn/CA2020-12_S12_$1.g.vcf \
+      --variant ../December2021_spawn/CA2020-13_S13_$1.g.vcf \
+      --variant ../December2021_spawn/CA2020-14_S14_$1.g.vcf \
+      --variant ../December2021_spawn/CA2020-15_S15_$1.g.vcf \
+      --variant ../December2021_spawn/CA2020-16_S16_$1.g.vcf \
+      --variant ../December2021_spawn/CA2020-3_S10_$1.g.vcf \
+      --variant ../December2021_spawn/CA2020-7_S17_$1.g.vcf \
+      --variant ../December2021_spawn/CA2020-8_S18_$1.g.vcf \
+      -L $1 \
+      -O CSLparentsandF1_20220617_$1.g.vcf
+
+#   ##genotypeGVCFs (allsites):
+   gatk GenotypeGVCFs \
+           -R ~/Ahyacinthusv1reference/annotationsv1/Ahyacinthus.chrsV1.fasta \
+           --variant CSLparentsandF1_20220617_$1.g.vcf \
+           --include-non-variant-sites \
+           -O CSLparentsandF1_20220617_$1_allsites_genotyped.g.vcf
+#
+#   ##remove sites with missing genotypes:
+   grep -vF './.' CSLparentsandF1_20220617_$1_allsites_genotyped.g.vcf | grep -vF '.|.' > CSLparentsandF1_20220617_$1_allsites_genotyped_nomissing.vcf
+
+
+  ##remove sites where QUAL (for nonvariant sites) or GQ (for variant sites) is less than 30:
+  conda activate bcftools
+  bcftools filter --include 'FORMAT/DP>10 && GQ>30' CSLparentsandF1_20220617_$1_allsites_genotyped_nomissing.vcf > CSLparentsandF1_20220617_$1_allsites_genotyped_nomissing_dp10gq30.vcf
+
+  #keep just biallelic SNPs:
+  bcftools view -m2 -M2 -v snps CSLparentsandF1_20220617_$1_allsites_genotyped_nomissing_dp10gq30.vcf > CSLparentsandF1_20220617_$1_allsites_genotyped_nomissing_dp10gq30_biSNPs.vcf
+
+
+
+
