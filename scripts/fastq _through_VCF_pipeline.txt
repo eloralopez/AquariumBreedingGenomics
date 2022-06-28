@@ -116,6 +116,104 @@ gatk HaplotypeCaller \
   #keep just biallelic SNPs:
   bcftools view -m2 -M2 -v snps CSLparentsandF1_20220617_$1_allsites_genotyped_nomissing_dp10gq30.vcf > CSLparentsandF1_20220617_$1_allsites_genotyped_nomissing_dp10gq30_biSNPs.vcf
 
+  #
+  Generating plink IBD file:
+  plink --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs.vcf --genome full --allow-extra-chr &
+
+  conda activate vcftools
+vcftools --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs.vcf --remove exclude_list --recode --out CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups &
+########where the exclude_list has 2020-7_S114 and 2020-8_S115
+#identify singletons:
+vcftools --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups.recode.vcf --singletons --out singletonfile202206 &
+#create list of positions to exclude:
+awk '{print $1" "$2}' singletonfile202206.singletons > singletons_exclude_positions_list
+##exclude positions that have singletons:
+vcftools --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups.recode.vcf --exclude-positions singletons_exclude_positions_list --recode --recode-INFO-all --out CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons &
+#plink on the file with two indivs and singletons removed:
+plink --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf --genome full --allow-extra-chr &
+
+#annotate with snpeff:
+conda activate snpeff
+snpEff -v -c /home/elopez-nandam/miniconda3/pkgs/snpeff-5.0-hdfd78af_1/share/snpeff-5.0-1/snpEff.config Ahyacinthus CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf > CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf &
+
+#generate Fst files:
+vcftools --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --weir-fst-pop listF1_2020 --weir-fst-pop ../listF0_2020 --out F1_vs_F0_2020 &
+
+vcftools --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --weir-fst-pop ../listF1_2019 --weir-fst-pop ../listF0_2019 --out F1_vs_F0_2019 &
+
+#subset vcf to just each set, then calculate allele freqs for each set
+conda activate vcftools
+vcftools --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --keep ../listF1_2019 --out F1_2019
+conda activate plink2
+plink2 --vcf F1_2019.recode.vcf --freq cols=+pos --out F1_2019
+
+conda activate vcftools
+vcftools --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --keep ../listF0_2019 --out F0_2019
+conda activate plink2
+plink2 --vcf F0_2019.recode.vcf --freq cols=+pos --out F0_2019
+
+conda activate vcftools
+vcftools --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --keep listF1_2020 --out F1_2020
+conda activate plink2
+plink2 --vcf F1_2020.recode.vcf --freq cols=+pos --out F1_2020
+
+conda activate vcftools
+vcftools --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --keep ../listF0_2020 --out F0_2020
+conda activate plink2
+plink2 --vcf F0_2020.recode.vcf --freq cols=+pos --out F0_2020
+
+#find shared outliers:
+Rscript fourpanelplot.R 
+
+#filter VCF to just the 887 sharedoutliers
+python3 filterVCFtojustoutliers.py trulysharedoutliers20220622.txt.ann.txt CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf > CSL_GATHERED_just887.ann.vcf
+
+#create vcf of the big family F0s:
+conda activate vcftools
+vcftools --keep ../listF0_2019_bigfamily --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --out bigfamily2019_allsnps_F0 &
+vcftools --keep ../listF0_2019_bigfamily --vcf CSL_GATHERED_just887.ann.vcf --recode --out bigfamily2019_just887_F0 &
+
+vcftools --keep ../listF1_2019_bigfamily --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --out bigfamily2019_allsnps_F1 &
+vcftools --keep ../listF1_2019_bigfamily --vcf CSL_GATHERED_just887.ann.vcf --recode --out bigfamily2019_just887_F1 &
+
+vcftools --keep ../listF0_2020_foursibs --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --out bigfamily2020_allsnps_F0 &
+vcftools --keep ../listF0_2020_foursibs --vcf CSL_GATHERED_just887.ann.vcf --recode --out bigfamily2020_just887_F0 &
+
+vcftools --keep listF1_2020_sixsibs --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --out bigfamily2020_allsnps_F1 &
+vcftools --keep listF1_2020_sixsibs --vcf CSL_GATHERED_just887.ann.vcf --recode --out bigfamily2020_just887_F1 &
+
+#vcf of ALL F0S
+vcftools --keep ../listF0 --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --out F0_allsnps &
+vcftools --keep ../listF0 --vcf CSL_GATHERED_just887.ann.vcf --recode --out F0_just887 &
+
+#VCF of ALL F1s
+vcftools --keep listF1 --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --out F1_allsnps &
+vcftools --keep listF1 --vcf CSL_GATHERED_just887.ann.vcf --recode --out F1_just887 &
 
 
+for i in bigfamily*vcf; do
+	plink2 --vcf $i --freq cols=+pos --out $i &
+	plink2 --vcf $i --geno-counts cols=+pos --out $i &
+done
+
+for i in F1*just887.vcf; do
+	plink2 --vcf $i --freq cols=+pos --out $i &
+	plink2 --vcf $i --geno-counts cols=+pos --out $i &
+done
+
+#filter the F1_2019 and F1_2020 VCFs to just 887:
+python3 filterVCFtojustoutliers.py trulysharedoutliers20220622.txt.ann.txt F1_2019.recode.vcf > F1_2019_just887.vcf &
+python3 filterVCFtojustoutliers.py trulysharedoutliers20220622.txt.ann.txt F1_2020.recode.vcf > F1_2020_just887.vcf &
+
+#mendelplot:
+Rscript mendelplot_all6panels.R bigfamily2019_allsnps_F0.recode.vcf.afreq bigfamily2019_allsnps_F1.recode.vcf.afreq bigfamily2019_allsnps_F1.recode.vcf.gcount bigfamily2019_just887_F0.recode.vcf.afreq bigfamily2019_just887_F1.recode.vcf.afreq bigfamily2019_just887_F1.recode.vcf.gcount mendel6panels20220622 &
+
+#hwplot:
+Rscript hw_wlines_8panelplot.R ../F0_allsnps_AF.afreq ../F0_allsnps_AF.afreq ../F0_allsnps.recode.vcf_genocounts.gcount ../F0_just652_AF.afreq ../F0_just652_AF.afreq ../F0_just652.recode.vcf_genocounts.gcount 8panelplot 
+
+
+#all: 12994408
+#no bg: 208833
+##sharedout_all: 1442
+#sharedout_samedir: 887
 
