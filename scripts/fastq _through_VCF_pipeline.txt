@@ -212,6 +212,34 @@ Rscript mendelplot_all6panels.R bigfamily2019_allsnps_F0.recode.vcf.afreq bigfam
 Rscript hw_wlines_8panelplot.R ../F0_allsnps_AF.afreq ../F0_allsnps_AF.afreq ../F0_allsnps.recode.vcf_genocounts.gcount ../F0_just652_AF.afreq ../F0_just652_AF.afreq ../F0_just652.recode.vcf_genocounts.gcount 8panelplot 
 
 
+
+##generate list of singletons among just the 2020 F0s:
+vcftools --vcf F0_2020.recode.vcf --singletons --out singletonfile_F0_2020_20220629 &
+##generate vcf for each chimera:
+vcftools --keep CA2020-7_S17 --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --out CA2020-7 &
+vcftools --keep CA2020-8_S18 --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --out CA2020-8 &
+vcftools --keep CA2020-16_S16 --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --out CA2020-16 &
+vcftools --keep CA2020-13_S13 --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --out CA2020-13 &
+###and a non-chim comparison:
+vcftools --keep CA2020-6_S100 --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --out CA2020-6 &
+vcftools --keep CA2020-10_S104 --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --out CA2020-10 &
+vcftools --keep CA2020-14_S14 --vcf CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf --recode --out CA2020-14 &
+for i in CA2020
+
+#match:
+python3 Match_chimera_with_singletons.py singletonfile_F0_2020_20220629.singletons CA2020-7.recode.vcf > singletons_found_in_CA2020-7.txt &
+python3 Match_chimera_with_singletons.py singletonfile_F0_2020_20220629.singletons CA2020-8.recode.vcf > singletons_found_in_CA2020-8.txt &
+python3 Match_chimera_with_singletons.py singletonfile_F0_2020_20220629.singletons CA2020-16.recode.vcf > singletons_found_in_CA2020-16.txt &
+python3 Match_chimera_with_singletons.py singletonfile_F0_2020_20220629.singletons CA2020-13.recode.vcf > singletons_found_in_CA2020-13.txt &
+python3 Match_chimera_with_singletons.py singletonfile_F0_2020_20220629.singletons CA2020-6.recode.vcf > singletons_found_in_CA2020-6.txt &
+python3 Match_chimera_with_singletons.py singletonfile_F0_2020_20220629.singletons CA2020-10.recode.vcf > singletons_found_in_CA2020-10.txt &
+python3 Match_chimera_with_singletons.py singletonfile_F0_2020_20220629.singletons CA2020-14.recode.vcf > singletons_found_in_CA2020-14.txt &
+
+
+#filter vcf to just the sites that are singletons among the 2020 F1s:
+python3 filterVCFtojustoutliers.py singletonfile_F0_2020_20220629.singletons CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf > CSL_GATHERED_just_2020F0sings.ann.vcf
+plink --vcf CSL_GATHERED_just_2020F0sings.ann.vcf --genome full --allow-extra-chr --out IBD_just_2020F0sings &
+
 #all: 12994408
 #no bg: 208833
 ##sharedout_all: 1442
