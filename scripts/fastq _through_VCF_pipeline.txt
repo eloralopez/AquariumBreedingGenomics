@@ -208,6 +208,12 @@ python3 filterVCFtojustoutliers.py trulysharedoutliers20220622.txt.ann.txt F1_20
 #mendelplot:
 Rscript mendelplot_all6panels.R bigfamily2019_allsnps_F0.recode.vcf.afreq bigfamily2019_allsnps_F1.recode.vcf.afreq bigfamily2019_allsnps_F1.recode.vcf.gcount bigfamily2019_just887_F0.recode.vcf.afreq bigfamily2019_just887_F1.recode.vcf.afreq bigfamily2019_just887_F1.recode.vcf.gcount mendel6panels20220622 &
 
+#mendeltables:
+Rscript mendel_makefiles.R bigfamily2019_allsnps_F0.recode.vcf.afreq bigfamily2019_allsnps_F1.recode.vcf.afreq bigfamily2019_allsnps_F1.recode.vcf.gcount bigfamily2019_just887_F0.recode.vcf.afreq bigfamily2019_just887_F1.recode.vcf.afreq bigfamily2019_just887_F1.recode.vcf.gcount 20220726 &
+
+Rscript mendel_makefiles.R bigfamily2020_allsnps_F0.recode.vcf.afreq bigfamily2020_allsnps_F1.recode.vcf.afreq bigfamily2020_allsnps_F1.recode.vcf.gcount bigfamily2020_just887_F0.recode.vcf.afreq bigfamily2020_just887_F1.recode.vcf.afreq bigfamily2020_just887_F1.recode.vcf.gcount bigfamily2020_20220726 &
+
+
 #hwplot:
 Rscript hw_wlines_8panelplot.R ../F0_allsnps_AF.afreq ../F0_allsnps_AF.afreq ../F0_allsnps.recode.vcf_genocounts.gcount ../F0_just652_AF.afreq ../F0_just652_AF.afreq ../F0_just652.recode.vcf_genocounts.gcount 8panelplot 
 
@@ -239,6 +245,9 @@ python3 Match_chimera_with_singletons.py singletonfile_F0_2020_20220629.singleto
 #filter vcf to just the sites that are singletons among the 2020 F1s:
 python3 filterVCFtojustoutliers.py singletonfile_F0_2020_20220629.singletons CSL_GATHERED_20220617_allsites_genotyped_nomissing_dp10gq30_biSNPs_nodups_nosingletons.recode.vcf.ann.vcf > CSL_GATHERED_just_2020F0sings.ann.vcf
 plink --vcf CSL_GATHERED_just_2020F0sings.ann.vcf --genome full --allow-extra-chr --out IBD_just_2020F0sings &
+
+#IBD for all sites, including nonvariant sites:
+plink --vcf CSL_GATHERED_20220617_allsites_nomissing_dp10_gqqual30.vcf --genome full --allow-extra-chr --out IBD_allsites &
 
 #all: 12994408
 #no bg: 208833
