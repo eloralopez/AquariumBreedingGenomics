@@ -1,8 +1,8 @@
-# AquariumBreedingGenomics
-# Genomes of F0 Acropora hyacinthus from Palau and F1 born at Cal Academy in 2019 and 2020
-# Elora H. López-Nandam<sup>1</sup>, Cheyenne Y. Payne^^2, J. Charles Delbeek^^3, Freeland Dunker^^3, Lana Krol^^3, Lisa Larkin^^3, Kylie Lev^^3, Rich Ross^^1, Ryan Schaeffer^^3, Steven Yong^^3, Rebecca Albright^^1
+# Kinship and genetic variation in aquarium-spawned Acropora hyacinthus corals 
+# Elora H. López-Nandam<sup>1</sup>, Cheyenne Y. Payne<sup>2</sup>, J. Charles Delbeek<sup>3</sup>, Freeland Dunker<sup>3</sup>, Lana Krol<sup>3</sup>, Lisa Larkin<sup>3</sup>, Kylie Lev<sup>3</sup>, Rich Ross<sup>3</sup>, Ryan Schaeffer<sup>3</sup>, Steven Yong<sup>3</sup>, Rebecca Albright<sup>1</sup>
+# Frontiers in Marine Science 9:961106. DOI: 10.3389/fmars.2022.961106
 
-^^1 Institute for Biodiversity and Sustainability Science, California Academy of Sciences, San Francisco, CA USA
-^^2 Biology Department, Stanford University, Stanford, CA USA
-^^3 Steinhart Aquarium, California Academy of Sciences, San Francisco, CA USA
+<sup>1</sup> Institute for Biodiversity and Sustainability Science, California Academy of Sciences, San Francisco, CA USA
+<sup>2</sup> Biology Department, Stanford University, Stanford, CA USA
+<sup>3</sup> Steinhart Aquarium, California Academy of Sciences, San Francisco, CA USA
  
