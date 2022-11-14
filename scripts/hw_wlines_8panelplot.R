@@ -8,19 +8,19 @@ library(ggforce)
 args = commandArgs(trailingOnly=TRUE)
 
 #read in files:
-afreq_1<-read.delim(args[1],header=TRUE)
+#afreq_1<-read.delim(args[1],header=TRUE)
 
-afreq_2<-read.delim(args[2],header=TRUE)
+#afreq_2<-read.delim(args[2],header=TRUE)
 
-f1_genocounts<-read.delim(args[3],header=TRUE)
+#f1_genocounts<-read.delim(args[3],header=TRUE)
 
-afreq_1_652<-read.delim(args[4],header=TRUE)
+#afreq_1_652<-read.delim(args[4],header=TRUE)
 
-afreq_2_652<-read.delim(args[5],header=TRUE)
+#afreq_2_652<-read.delim(args[5],header=TRUE)
 
-f1_genocounts_652<-read.delim(args[6],header=TRUE)
+#f1_genocounts_652<-read.delim(args[6],header=TRUE)
 
-plotname<-args[7]
+plotname<-args[1]
 
 freq_func<-function(afreq_1, afreq_2, f1_genocounts) {
   
@@ -44,7 +44,7 @@ freq_func<-function(afreq_1, afreq_2, f1_genocounts) {
   
 }
 
-hw_wlines_func<-function(freq_1, freq_2) {
+hw_wlines_func<-function(freq_1, freq_2, tag_name_1, title_name_1, tag_name_2, title_name_2) {
   x <- 0:1
   dat <- data.frame(x, y=2*x*(1-x))
   f <- function(x) y=2*x*(1-x)
@@ -61,7 +61,13 @@ hw_wlines_func<-function(freq_1, freq_2) {
     stat_function(fun=f2,colour="red", size=0.5)+
     stat_function(fun=f3, colour="blue4", size=0.5)+
     xlab("alt allele frequency")+ylab("genotype frequency")+
-    theme_bw()
+    theme_bw()+labs(tag=tag_name_1)+
+    ggtitle(title_name_1)+
+  theme(axis.text=element_text(size=15),
+    axis.text.x=element_text(size=15),
+        axis.title=element_text(size=15))+
+  theme(legend.text=element_text(size=15),legend.title=element_text(size=15),
+    plot.title=element_text(size=15))
   #geom_hline(yintercept=0)+geom_vline(xintercept=0)+
   #  scale_y_continuous(expand = c(0,0.00))+scale_x_continuous(expand=c(0,0))+
   #  theme(axis.line = element_line(colour = "black"),
@@ -79,7 +85,13 @@ hw_wlines_func<-function(freq_1, freq_2) {
     stat_function(fun=f2,colour="red", size=0.5)+
     stat_function(fun=f3, colour="blue4", size=0.5)+
     xlab("alt allele frequency")+ylab("genotype frequency")+
-    theme_bw() 
+    theme_bw() +labs(tag=tag_name_2)+
+    ggtitle(title_name_2)+
+  theme(axis.text=element_text(size=15),
+    axis.text.x=element_text(size=15),
+        axis.title=element_text(size=15))+
+  theme(legend.text=element_text(size=15),legend.title=element_text(size=15),
+    plot.title=element_text(size=15))
   #geom_hline(yintercept=0)+geom_vline(xintercept=0)+
   #  scale_y_continuous(expand = c(0,0.00))+scale_x_continuous(expand=c(0,0))+
   #  theme(axis.line = element_line(colour = "black"),
@@ -91,22 +103,36 @@ hw_wlines_func<-function(freq_1, freq_2) {
   hw_wlines_combined<- hw_wlines_1 | hw_wlines_2
   return(hw_wlines_combined)
 }
-freq_1<-freq_func(afreq_1, afreq_2, f1_genocounts)
-freq_2<-freq_func(afreq_1_652, afreq_2_652, f1_genocounts_652)
-freq_3<-freq_func(read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652.recode.vcf_genocounts.gcount",header=TRUE))
-freq_4<-freq_func(read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652.recode.vcf_genocounts.gcount",header=TRUE))
-freq_5<-freq_func(read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652.recode.vcf_genocounts.gcount",header=TRUE))
-freq_6<-freq_func(read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652.recode.vcf_genocounts.gcount",header=TRUE))
-freq_7<-freq_func(read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652.recode.vcf_genocounts.gcount",header=TRUE))
-freq_8<-freq_func(read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652.recode.vcf_genocounts.gcount",header=TRUE))
+#freq_1<-freq_func(afreq_1, afreq_2, f1_genocounts)
+#freq_2<-freq_func(afreq_1_652, afreq_2_652, f1_genocounts_652)
+#freq_3<-freq_func(read.delim("../F1_allsnps_AF.afreq",header=TRUE), read.delim("../F1_allsnps_AF.afreq",header=TRUE), read.delim("../F1_allsnps.recode.vcf_genocounts.gcount",header=TRUE))
+#freq_4<-freq_func(read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652.recode.vcf_genocounts.gcount",header=TRUE))
+#freq_5<-freq_func(read.delim("../F1_2019_allsnps_AF.afreq",header=TRUE), read.delim("../F1_2019_allsnps_AF.afreq",header=TRUE), read.delim("../F1_2019_allsnps.recode.vcf_genocounts.gcount",header=TRUE))
+#freq_6<-freq_func(read.delim("../F1_2019_just652_AF.afreq",header=TRUE), read.delim("../F1_2019_just652_AF.afreq",header=TRUE), read.delim("../F1_2019_just652.recode.vcf_genocounts.gcount",header=TRUE))
+#freq_7<-freq_func(read.delim("../F1_2020_allsnps_AF.afreq",header=TRUE), read.delim("../F1_2020_allsnps_AF.afreq",header=TRUE), read.delim("../F1_2020_allsnps.recode.vcf_genocounts.gcount",header=TRUE))
+#freq_8<-freq_func(read.delim("../F1_2020_just652_AF.afreq",header=TRUE), read.delim("../F1_2020_just652_AF.afreq",header=TRUE), read.delim("../F1_2020_just652.recode.vcf_genocounts.gcount",header=TRUE))
 
-plot_1<-hw_wlines_func(freq_1, freq_2)
-plot_2<-hw_wlines_func(freq_3, freq_4)
-plot_3<-hw_wlines_func(freq_5, freq_6)
-plot_4<-hw_wlines_func(freq_7, freq_8)
+#freq_7<-freq_func(read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652.recode.vcf_genocounts.gcount",header=TRUE))
+#freq_8<-freq_func(read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652_AF.afreq",header=TRUE), read.delim("../F1_just652.recode.vcf_genocounts.gcount",header=TRUE))
+
+freq_1<-freq_func(read.delim("F0_allsnps.recode.vcf.afreq",header=TRUE), read.delim("F0_allsnps.recode.vcf.afreq",header=TRUE), read.delim("F0_allsnps.recode.vcf.gcount",header=TRUE))
+freq_2<-freq_func(read.delim("F0_just887.recode.vcf.afreq",header=TRUE), read.delim("F0_just887.recode.vcf.afreq",header=TRUE), read.delim("F0_just887.recode.vcf.gcount",header=TRUE))
+freq_3<-freq_func(read.delim("F1_allsnps.recode.vcf.afreq",header=TRUE), read.delim("F1_allsnps.recode.vcf.afreq",header=TRUE), read.delim("F1_allsnps.recode.vcf.gcount",header=TRUE))
+freq_4<-freq_func(read.delim("F1_just887.recode.vcf.afreq",header=TRUE), read.delim("F1_just887.recode.vcf.afreq",header=TRUE), read.delim("F1_just887.recode.vcf.gcount",header=TRUE))
+freq_5<-freq_func(read.delim("F1_2019.afreq",header=TRUE), read.delim("F1_2019.afreq",header=TRUE), read.delim("F1_2019.recode.vcf.gcount",header=TRUE))
+freq_6<-freq_func(read.delim("F1_2019_just887.vcf.afreq",header=TRUE), read.delim("F1_2019_just887.vcf.afreq",header=TRUE), read.delim("F1_2019_just887.vcf.gcount",header=TRUE))
+freq_7<-freq_func(read.delim("F1_2020.afreq",header=TRUE), read.delim("F1_2020.afreq",header=TRUE), read.delim("F1_2020.recode.vcf.gcount",header=TRUE))
+freq_8<-freq_func(read.delim("F1_2020_just887.vcf.afreq",header=TRUE), read.delim("F1_2020_just887.vcf.afreq",header=TRUE), read.delim("F1_2020_just887.vcf.gcount",header=TRUE))
+
+
+plot_1<-hw_wlines_func(freq_1, freq_2, "A.", "All spawners, all SNPs", "B.", "All spawners, shared outlier SNPs")
+plot_2<-hw_wlines_func(freq_3, freq_4, "C.", "All F1s, all SNPs", "D.", "All F1s, shared outlier SNPs")
+plot_3<-hw_wlines_func(freq_5, freq_6, "E.", "2019 F1s, all SNPs", "F.", "2019 F1s, shared outlier SNPs")
+plot_4<-hw_wlines_func(freq_7, freq_8, "G.", "2020 F1s, all SNPs", "H.", "2020 F1s, shared outlier SNPs")
 
 hw_wlines_combined<- plot_1 / plot_2 / plot_3 / plot_4
 
 hw_wlines_plotname<- paste0("hw_wlines",plotname,".png")
 ggsave(hw_wlines_plotname, hw_wlines_combined,
-       width = 8, height = 5, dpi = 300, units = "in", device='png')
+       width = 14, height = 21, dpi = 300, units = "in", device='png')
+
